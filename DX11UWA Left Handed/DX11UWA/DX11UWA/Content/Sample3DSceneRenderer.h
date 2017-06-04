@@ -1,5 +1,5 @@
 ﻿#pragma once
-
+#include <vector>
 #include "..\Common\DeviceResources.h"
 #include "ShaderStructures.h"
 #include "..\Common\StepTimer.h"
@@ -11,9 +11,13 @@ namespace DX11UWA
 	class Sample3DSceneRenderer
 	{
 	public:
+	//VARIABLES TO USE FOR MODEL LOADING
+	
+	
 		Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 		void CreateDeviceDependentResources(void);
 		void CreateWindowSizeDependentResources(void);
+		bool loadOBJ(const char * path, std::vector<VertexPositionUVNormal> &vpuvn, std::vector<unsigned int> &outIndices);
 		void ReleaseDeviceDependentResources(void);
 		void Update(DX::StepTimer const& timer);
 		void Render(void);
@@ -36,6 +40,7 @@ namespace DX11UWA
 		// Cached pointer to device resources.
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
 
+		std::shared_ptr<DX::DeviceResources> myTriDeviceResources;
 		// Direct3D resources for cube geometry.
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	m_inputLayout;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer;
@@ -43,6 +48,15 @@ namespace DX11UWA
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer;
+
+
+		Microsoft::WRL::ComPtr<ID3D11InputLayout> myTriInputLayout;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> myTriVertexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> myTriIndexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11VertexShader> myTriVertexShader;
+		Microsoft::WRL::ComPtr<ID3D11PixelShader> myTriPixelShader;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> myTriConstantBuffer;
+		ModelViewProjectionConstantBuffer myTriConstantBufferData;
 
 		// System resources for cube geometry.
 		ModelViewProjectionConstantBuffer	m_constantBufferData;
