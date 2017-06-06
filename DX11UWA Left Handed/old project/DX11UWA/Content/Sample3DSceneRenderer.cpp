@@ -8,7 +8,6 @@ using namespace DX11UWA;
 using namespace DirectX;
 using namespace Windows::Foundation;
 
-
 bool Sample3DSceneRenderer::loadOBJ(const char * path, std::vector<VertexPositionUVNormal> &vpuvn, std::vector<unsigned int> &outIndices)
 {
 	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
@@ -33,14 +32,14 @@ bool Sample3DSceneRenderer::loadOBJ(const char * path, std::vector<VertexPositio
 		if (strcmp(lineHeader, "v") == 0)
 		{
 			XMFLOAT3 vertex;
-			fscanf_s(file, "%f %f\n", &vertex.x, &vertex.y);
+			fscanf_s(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
 			temp_vertices.push_back(vertex);
 
 		}
 		else if (strcmp(lineHeader, "vt") == 0)
 		{
 			XMFLOAT2 uv;
-			fscanf_s(file, "%f %f\n", &uv.x, &uv.y);
+			fscanf_s(file, "%f %f \n", &uv.x, &uv.y);
 			temp_uvs.push_back(uv);
 		}
 	
@@ -76,13 +75,10 @@ bool Sample3DSceneRenderer::loadOBJ(const char * path, std::vector<VertexPositio
 	}
 
 	}
+	
 	for (unsigned int i = 0; i < vertexIndices.size(); i++)
 	{
 		VertexPositionUVNormal tempvpuvn;
-
-		unsigned int vertexIndex = vertexIndices[i];
-		unsigned int uvIndex = uvIndices[i];
-		unsigned int normalIndex = normalIndices[i];
 
 		XMFLOAT3 vertex = temp_vertices[vertexIndices[i] - 1];
 		tempvpuvn.pos = temp_vertices[vertexIndices[i] - 1];
@@ -93,7 +89,26 @@ bool Sample3DSceneRenderer::loadOBJ(const char * path, std::vector<VertexPositio
 	}
 }
 
-
+//void Sample3DSceneRenderer::CreateVP(void)
+//{
+//	D3D11_VIEWPORT vp;
+//	vp.Width = m_deviceResources->GetOutputSize().Width / 2;
+//	vp.Height = m_deviceResources->GetOutputSize().Height;
+//	vp.MinDepth = 0.0f;
+//	vp.MaxDepth = 1.0f;
+//	vp.TopLeftX = 0;
+//	vp.TopLeftY = 0;
+//	m_scene.viewports.push_back(vp);
+//
+//	D3D11_VIEWPORT vp2;
+//	vp2.Width = m_deviceResources->GetOutputSize().Width / 2;
+//	vp2.Height = m_deviceResources->GetOutputSize().Height;
+//	vp2.MinDepth = 0.0f;
+//	vp2.MaxDepth = 1.0f;
+//	vp2.TopLeftX = m_deviceResources->GetOutputSize().Width / 2;
+//	vp2.TopLeftY = 0;
+//	m_scene.viewports.push_back(vp2);
+//}
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 Sample3DSceneRenderer::Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
@@ -153,6 +168,21 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources(void)
 // Called once per frame, rotates the cube and calculates the model and view matrices.
 void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 {
+	XMVECTOR camTarget;
+	XMVECTOR xvec = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+
+
+		//XMVector3TransformCoord();
+	//camTarget = XMVector3TransformCoord(xvec,m_constantBufferData.model);
+	//light lights;
+	//lights.lightPos = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	//lights.lightDir = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	//lights.range = 1000.0f;
+	//lights.cone = 20.0f;
+	//lights.attenuation = XMFLOAT3(0.4f, 0.02f, 0.0f);
+	//lights.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	//lights.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
 	if (!m_tracking)
 	{
 		// Convert degrees to radians, then convert seconds to rotation angle
@@ -163,7 +193,11 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		Rotate(radians);
 	}
 
-
+	//lights.lightPos.x = m_camera._41;
+	//lights.lightPos.y = m_camera._42;
+	//lights.lightPos.z = m_camera._43;
+	//			
+	//lights.lightDir.x =   - lights.lightPos.x;
 	// Update or move camera here
 	UpdateCamera(timer, 1.0f, 0.75f);
 
@@ -175,7 +209,8 @@ void Sample3DSceneRenderer::Rotate(float radians)
 	// Prepare to pass the updated model matrix to the shader
 	XMStoreFloat4x4(&m_constantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
 
-	XMStoreFloat4x4(&myTriConstantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
+	//ME TRYING TO ROTATE MY OWN THING
+	//XMStoreFloat4x4(&myTriConstantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
 }
 
 void Sample3DSceneRenderer::UpdateCamera(DX::StepTimer const& timer, float const moveSpd, float const rotSpd)
@@ -260,34 +295,34 @@ void Sample3DSceneRenderer::UpdateCamera(DX::StepTimer const& timer, float const
 void Sample3DSceneRenderer::SetKeyboardButtons(const char* list)
 {
 	memcpy_s(m_kbuttons, sizeof(m_kbuttons), list, sizeof(m_kbuttons));
-}
-
+} 
+//
 void Sample3DSceneRenderer::SetMousePosition(const Windows::UI::Input::PointerPoint^ pos)
 {
 	m_currMousePos = const_cast<Windows::UI::Input::PointerPoint^>(pos);
 }
-
+//
 void Sample3DSceneRenderer::SetInputDeviceData(const char* kb, const Windows::UI::Input::PointerPoint^ pos)
 {
 	SetKeyboardButtons(kb);
 	SetMousePosition(pos);
 }
-
+//
 void DX11UWA::Sample3DSceneRenderer::StartTracking(void)
 {
 	m_tracking = true;
 }
-
+//
 // When tracking, the 3D cube can be rotated around its Y axis by tracking pointer position relative to the output screen width.
 void Sample3DSceneRenderer::TrackingUpdate(float positionX)
 {
-//if (m_tracking)
-//{
-//	float radians = XM_2PI * 2.0f * positionX / m_deviceResources->GetOutputSize().Width;
-//	Rotate(radians);
-//}
+if (m_tracking)
+{
+	float radians = XM_2PI * 2.0f * positionX / m_deviceResources->GetOutputSize().Width;
+	Rotate(radians);
 }
-
+}
+//
 void Sample3DSceneRenderer::StopTracking(void)
 {
 	m_tracking = false;
@@ -310,7 +345,9 @@ void Sample3DSceneRenderer::Render(void)
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(m_constantBuffer.Get(), 0, NULL, &m_constantBufferData, 0, 0, 0);
 	// Each vertex is one instance of the VertexPositionColor struct.
+	VertexPositionColor;
 	UINT stride = sizeof(VertexPositionUVNormal);
+	VertexPositionUVNormal;
 	UINT offset = 0;
 	context->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 	// Each index is one 16-bit unsigned integer (short).
@@ -333,7 +370,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	// Load shaders asynchronously.
 	auto loadVSTask = DX::ReadDataAsync(L"SampleVertexShader.cso");
 	auto loadPSTask = DX::ReadDataAsync(L"SamplePixelShader.cso");
-
+	//auto loadGSTask = DX::ReadDataAsync(L"GeometryShader.cso");
 	
 	// After the vertex shader file is loaded, create the shader and input layout.
 	auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData)
@@ -342,11 +379,13 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 
 		static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
 		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		};
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			//{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 
+		};
+		//ID3D11Device::CreateInputLayout(vertexDesc, );
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &m_inputLayout));
 	});
 
@@ -367,23 +406,26 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 
 		bool res = loadOBJ("Assets/peng.obj", vertUvNormal, out_indices);
 
-		// Load mesh vertices. Each vertex has a position and a color.
-		//static const VertexPositionColor cubeVertices[] =
-		//{
-		//	{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
-		//	{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
-		//	{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
-		//	{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
-		//	{XMFLOAT3( 0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
-		//	{XMFLOAT3( 0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
-		//	{XMFLOAT3( 0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
-		//	{XMFLOAT3( 0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
-		//};
+	//Load mesh vertices. Each vertex has a position and a color.
+	//static const VertexPositionColor cubeVertices[] =
+	//{
+	//	{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
+	//	{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
+	//	{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
+	//	{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
+	//	{XMFLOAT3( 0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
+	//	{XMFLOAT3( 0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
+	//	{XMFLOAT3( 0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
+	//	{XMFLOAT3( 0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
+	//};
 
 		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
 		vertexBufferData.pSysMem = vertUvNormal.data();
+		//vertexBufferData.pSysMem = cubeVertices;
 		vertexBufferData.SysMemPitch = 0;
 		vertexBufferData.SysMemSlicePitch = 0;
+		//CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(cubeVertices), D3D11_BIND_VERTEX_BUFFER);
+
 		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(VertexPositionUVNormal) * vertUvNormal.size(), D3D11_BIND_VERTEX_BUFFER);
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &m_vertexBuffer));
 
@@ -392,39 +434,45 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		// For example: 0,2,1 means that the vertices with indexes
 		// 0, 2 and 1 from the vertex buffer compose the 
 		// first triangle of this mesh.
-		//static const unsigned short cubeIndices[] =
-		//{
-		//	0,1,2, // -x
-		//	1,3,2,
+		static const unsigned short cubeIndices[] =
+		{
+			0,1,2, // -x
+			1,3,2,
 
-		//	4,6,5, // +x
-		//	5,6,7,
+			4,6,5, // +x
+			5,6,7,
 
-		//	0,5,1, // -y
-		//	0,4,5,
+			0,5,1, // -y
+			0,4,5,
 
-		//	2,7,6, // +y
-		//	2,3,7,
+			2,7,6, // +y
+			2,3,7,
 
-		//	0,6,4, // -z
-		//	0,2,6,
+			0,6,4, // -z
+			0,2,6,
 
-		//	1,7,3, // +z
-		//	1,5,7,
-		//};
+			1,7,3, // +z
+			1,5,7,
+		};
+		//m_indexCount = ARRAYSIZE(cubeIndices);
 
 		m_indexCount = out_indices.size();
 
 		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+		//indexBufferData.pSysMem = cubeIndices;
 		indexBufferData.pSysMem = out_indices.data();
 		indexBufferData.SysMemPitch = 0;
 		indexBufferData.SysMemSlicePitch = 0;
+		//CD3D11_BUFFER_DESC indexBufferDesc(sizeof(cubeIndices), D3D11_BIND_INDEX_BUFFER);
 		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(unsigned int) * out_indices.size(), D3D11_BIND_INDEX_BUFFER);
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_indexBuffer));
 
 	});
 
-
+	//auto createPyramidTask = (createPSTask && createVSTask).then([this]()
+	//{
+	//
+	//});
 
 	// Once the cube is loaded, the object is ready to be rendered.
 	createCubeTask.then([this]()

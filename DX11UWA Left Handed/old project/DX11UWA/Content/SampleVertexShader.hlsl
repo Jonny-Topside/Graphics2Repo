@@ -11,13 +11,16 @@ struct VertexShaderInput
 {
 	float3 pos : POSITION;
 	float2 uv : UV;
+	float3 normal : NORMAL;
 };
 
 // Per-pixel color data passed through the pixel shader.
 struct PixelShaderInput
 {
 	float4 pos : SV_POSITION;
-	float3 uv : UV;
+	float2 uv : UV;
+	float3 normal : NORMAL;
+
 };
 
 // Simple shader to do vertex processing on the GPU.
@@ -34,6 +37,6 @@ PixelShaderInput main(VertexShaderInput input)
 
 	// Pass the color through without modification.
 	output.uv = input.uv;
-
+	output.normal = input.normal;
 	return output;
 }
