@@ -469,10 +469,70 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 
 	});
 
-	//auto createPyramidTask = (createPSTask && createVSTask).then([this]()
-	//{
-	//
-	//});
+	auto createPyramidTask = (createPSTask && createVSTask).then([this]()
+	{
+		//Load mesh vertices. Each vertex has a position and a color.
+		static const VertexPositionColor triVertices[] =
+		{
+			{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
+			{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
+			{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
+			{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
+			{XMFLOAT3( 0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
+			{XMFLOAT3( 0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
+			{XMFLOAT3( 0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
+			{XMFLOAT3( 0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
+		};
+
+		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
+		vertexBufferData.pSysMem = triVertices;
+		//vertexBufferData.pSysMem = cubeVertices;
+		vertexBufferData.SysMemPitch = 0;
+		vertexBufferData.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(triVertices), D3D11_BIND_VERTEX_BUFFER);
+
+		//CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(VertexPositionUVNormal) * vertUvNormal.size(), D3D11_BIND_VERTEX_BUFFER);
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &m_vertexBuffer));
+
+		// Load mesh indices. Each trio of indices represents
+		// a triangle to be rendered on the screen.
+		// For example: 0,2,1 means that the vertices with indexes
+		// 0, 2 and 1 from the vertex buffer compose the 
+		// first triangle of this mesh.
+		static const unsigned short triIndices[] =
+		{
+			0,1,2, // -x
+			1,3,2,
+
+			4,6,5, // +x
+			5,6,7,
+
+			0,5,1, // -y
+			0,4,5,
+
+			2,7,6, // +y
+			2,3,7,
+
+			0,6,4, // -z
+			0,2,6,
+
+			1,7,3, // +z
+			1,5,7,
+		};
+		m_indexCount = ARRAYSIZE(triIndices);
+
+		//m_indexCount = out_indices.size();
+
+		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+		//indexBufferData.pSysMem = cubeIndices;
+		indexBufferData.pSysMem =triIndices;
+		indexBufferData.SysMemPitch = 0;
+		indexBufferData.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(triIndices), D3D11_BIND_INDEX_BUFFER);
+		//CD3D11_BUFFER_DESC indexBufferDesc(sizeof(unsigned int) * out_indices.size(), D3D11_BIND_INDEX_BUFFER);
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_indexBuffer));
+
+	});
 
 	// Once the cube is loaded, the object is ready to be rendered.
 	createCubeTask.then([this]()

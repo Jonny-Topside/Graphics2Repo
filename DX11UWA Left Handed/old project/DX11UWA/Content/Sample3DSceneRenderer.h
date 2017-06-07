@@ -58,13 +58,11 @@ namespace DX11UWA
 	private:
 		// Cached pointer to device resources.
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
-
-		//std::shared_ptr<DX::DeviceResources> myTriDeviceResources;
 		// Direct3D resources for cube geometry.
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	m_inputLayout;
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader;
-
+		//MULTIPLE
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer;
 
 		//Microsoft::WRL::ComPtr<ID3D11GeometryShader>	myTriGeoShader;
