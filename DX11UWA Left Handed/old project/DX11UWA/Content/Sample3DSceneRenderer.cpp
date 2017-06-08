@@ -362,6 +362,21 @@ void Sample3DSceneRenderer::Render(void)
 	context->PSSetShader(m_pixelShader.Get(), nullptr, 0);
 	// Draw the objects.
 	context->DrawIndexed(m_indexCount, 0, 0);
+
+
+	stride = sizeof(VertexPositionColor);
+
+	context->IASetVertexBuffers(0, 1, pyramidVertexBuffer.GetAddressOf(), &stride, &offset);
+	context->IASetIndexBuffer(pyramidIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+
+	//context->IASetInputLayout(pyramidInputLayout.Get());
+
+
+	context->VSSetShader(pyramidVertexShader.Get(), nullptr, 0);
+	context->VSSetConstantBuffers1(0, 1, pyramidConstantBuffer.GetAddressOf(), nullptr, nullptr);
+	context->PSSetShader(pyramidPixelShader.Get(), nullptr, 0);
+	context->DrawIndexed(pyramidIndexCount, 0, 0);
+
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
@@ -370,8 +385,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	// Load shaders asynchronously.
 	auto loadVSTask = DX::ReadDataAsync(L"SampleVertexShader.cso");
 	auto loadPSTask = DX::ReadDataAsync(L"SamplePixelShader.cso");
-	//auto loadGSTask = DX::ReadDataAsync(L"GeometryShader.cso");
-	
+
 	// After the vertex shader file is loaded, create the shader and input layout.
 	auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData)
 	{
@@ -382,8 +396,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			{ "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			//{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-
+			
 		};
 		//ID3D11Device::CreateInputLayout(vertexDesc, );
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &m_inputLayout));
@@ -419,7 +432,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	//	{XMFLOAT3( 0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
 	//};
 
-		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
+		D3D11_SUBRESOURCE_DATA vertexBufferData;
 		vertexBufferData.pSysMem = vertUvNormal.data();
 		//vertexBufferData.pSysMem = cubeVertices;
 		vertexBufferData.SysMemPitch = 0;
@@ -434,26 +447,26 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		// For example: 0,2,1 means that the vertices with indexes
 		// 0, 2 and 1 from the vertex buffer compose the 
 		// first triangle of this mesh.
-		static const unsigned short cubeIndices[] =
-		{
-			0,1,2, // -x
-			1,3,2,
-
-			4,6,5, // +x
-			5,6,7,
-
-			0,5,1, // -y
-			0,4,5,
-
-			2,7,6, // +y
-			2,3,7,
-
-			0,6,4, // -z
-			0,2,6,
-
-			1,7,3, // +z
-			1,5,7,
-		};
+	//	static const unsigned short cubeIndices[] =
+	//	{
+	//		0,1,2, // -x
+	//		1,3,2,
+	//
+	//		4,6,5, // +x
+	//		5,6,7,
+	//
+	//		0,5,1, // -y
+	//		0,4,5,
+	//
+	//		2,7,6, // +y
+	//		2,3,7,
+	//
+	//		0,6,4, // -z
+	//		0,2,6,
+	//
+	//		1,7,3, // +z
+	//		1,5,7,
+	//	};
 		//m_indexCount = ARRAYSIZE(cubeIndices);
 
 		m_indexCount = out_indices.size();
@@ -469,19 +482,40 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 
 	});
 
-	auto createPyramidTask = (createPSTask && createVSTask).then([this]()
+
+	auto createPyramidVSTask = loadVSTask.then([this](const std::vector<byte>& fileData)
+	{
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &pyramidVertexShader));
+
+		static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+
+		};
+	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &pyramidInputLayout));
+
+	});
+
+
+	auto createPyramidPSTask = loadPSTask.then([this](const std::vector<byte>& fileData)
+	{
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreatePixelShader(&fileData[0], fileData.size(), nullptr, &pyramidPixelShader));
+
+		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&constantBufferDesc, nullptr, &pyramidConstantBuffer));
+	});
+
+	auto createPyramidTask = (createPyramidPSTask && createPyramidVSTask).then([this]()
 	{
 		//Load mesh vertices. Each vertex has a position and a color.
 		static const VertexPositionColor triVertices[] =
 		{
-			{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
-			{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
-			{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
-			{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
-			{XMFLOAT3( 0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
-			{XMFLOAT3( 0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
-			{XMFLOAT3( 0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
-			{XMFLOAT3( 0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
+			{XMFLOAT3(0.0f, 0.5f, 0.0f), //top 
+			XMFLOAT3(-0.5f, 0.0f, -0.5f)},
+			{XMFLOAT3(-0.5f, 0.0f,  0.5f), 
+			XMFLOAT3(-0.5f, 0.0f, -0.5f)},
+			{XMFLOAT3(0.5f,  0.0f, 0.5f)}
 		};
 
 		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
@@ -492,34 +526,23 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(triVertices), D3D11_BIND_VERTEX_BUFFER);
 
 		//CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(VertexPositionUVNormal) * vertUvNormal.size(), D3D11_BIND_VERTEX_BUFFER);
-		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &m_vertexBuffer));
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &pyramidVertexBuffer));
 
-		// Load mesh indices. Each trio of indices represents
-		// a triangle to be rendered on the screen.
-		// For example: 0,2,1 means that the vertices with indexes
-		// 0, 2 and 1 from the vertex buffer compose the 
-		// first triangle of this mesh.
+	
 		static const unsigned short triIndices[] =
 		{
-			0,1,2, // -x
-			1,3,2,
+			4,0,1, // -x
+			1,0,2,
 
-			4,6,5, // +x
-			5,6,7,
+			2,0,3, // +x
+			3,0,4,
 
-			0,5,1, // -y
-			0,4,5,
+			1,3,4, // -y
+			1,3,2
 
-			2,7,6, // +y
-			2,3,7,
-
-			0,6,4, // -z
-			0,2,6,
-
-			1,7,3, // +z
-			1,5,7,
+			
 		};
-		m_indexCount = ARRAYSIZE(triIndices);
+		pyramidIndexCount = ARRAYSIZE(triIndices);
 
 		//m_indexCount = out_indices.size();
 
@@ -530,12 +553,12 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		indexBufferData.SysMemSlicePitch = 0;
 		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(triIndices), D3D11_BIND_INDEX_BUFFER);
 		//CD3D11_BUFFER_DESC indexBufferDesc(sizeof(unsigned int) * out_indices.size(), D3D11_BIND_INDEX_BUFFER);
-		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_indexBuffer));
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&indexBufferDesc, &indexBufferData, &pyramidIndexBuffer));
 
 	});
 
 	// Once the cube is loaded, the object is ready to be rendered.
-	createCubeTask.then([this]()
+	createPyramidTask.then([this]()
 	{
 		m_loadingComplete = true;
 	});
@@ -550,4 +573,10 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources(void)
 	m_constantBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
+	pyramidConstantBuffer.Reset();
+	pyramidIndexBuffer.Reset();
+	pyramidInputLayout.Reset();
+	pyramidPixelShader.Reset();
+	pyramidVertexShader.Reset();
+	pyramidVertexBuffer.Reset();
 }

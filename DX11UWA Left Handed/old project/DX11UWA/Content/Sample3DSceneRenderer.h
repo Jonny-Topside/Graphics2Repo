@@ -11,8 +11,7 @@ namespace DX11UWA
 	class Sample3DSceneRenderer
 	{
 	public:
-		//VARIABLES TO USE FOR MODEL LOADING
-
+		
 
 		bool loadOBJ(const char * path, std::vector<VertexPositionUVNormal> &vpuvn, std::vector<unsigned int> &outIndices);
 		Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
@@ -64,30 +63,27 @@ namespace DX11UWA
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader;
 		//MULTIPLE
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer;
+		//pyramid vars
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>	pyramidVertexShader;
+		Microsoft::WRL::ComPtr<ID3D11PixelShader>	pyramidPixelShader;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		pyramidConstantBuffer;
+		Microsoft::WRL::ComPtr<ID3D11InputLayout>	pyramidInputLayout;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		pyramidIndexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>	pyramidVertexBuffer;
 
-		//Microsoft::WRL::ComPtr<ID3D11GeometryShader>	myTriGeoShader;
-		//Microsoft::WRL::ComPtr<ID3D11Buffer> myTriVertexBuffer;
-		//Microsoft::WRL::ComPtr<ID3D11VertexShader> myTriVertexShader;
-		//ModelViewProjectionConstantBuffer myTriConstantBufferData;
 
+		uint32	pyramidIndexCount;
 
-		//class model
-		//{
+		
 			// System resources for cube geometry.
-			ModelViewProjectionConstantBuffer	m_constantBufferData;
-			uint32	m_indexCount;
+
 			Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer;
 			Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer;
-			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	m_texture;
-			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_textureNormal;
-			Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_textureSpecular;
-			DirectX::XMFLOAT3						m_position;
-			bool									m_render;
-			bool									m_instantiate;
-			Microsoft::WRL::ComPtr<ID3D11Buffer>	m_instanceBuffer;
+			ModelViewProjectionConstantBuffer	m_constantBufferData;
+			uint32	m_indexCount;
+			
 
-
-		//};
+		
 		// Variables used with the rendering loop.
 		bool	m_loadingComplete;
 		float	m_degreesPerSecond;
