@@ -155,6 +155,7 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources(void)
 	XMMATRIX orientationMatrix = XMLoadFloat4x4(&orientation);
 
 	XMStoreFloat4x4(&m_constantBufferData.projection, XMMatrixTranspose(perspectiveMatrix * orientationMatrix));
+	XMStoreFloat4x4(&pyramidConstantBufferData.projection, XMMatrixTranspose(perspectiveMatrix * orientationMatrix));
 
 	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
 	static const XMVECTORF32 eye = { 0.0f, 0.7f, -1.5f, 0.0f };
@@ -163,6 +164,8 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources(void)
 
 	XMStoreFloat4x4(&m_camera, XMMatrixInverse(nullptr, XMMatrixLookAtLH(eye, at, up)));
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
+	XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
+
 }
 
 // Called once per frame, rotates the cube and calculates the model and view matrices.
@@ -208,7 +211,8 @@ void Sample3DSceneRenderer::Rotate(float radians)
 {
 	// Prepare to pass the updated model matrix to the shader
 	XMStoreFloat4x4(&m_constantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
-
+	XMStoreFloat4x4(&pyramidConstantBufferData.model,  XMMatrixTranspose(XMMatrixRotationY(radians)));
+	
 	//ME TRYING TO ROTATE MY OWN THING
 	//XMStoreFloat4x4(&myTriConstantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
 }
@@ -340,10 +344,14 @@ void Sample3DSceneRenderer::Render(void)
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	XMStoreFloat4x4(&pyramidConstantBufferData.view,  XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	 XMMatrixTranslation(200, 200, 200);
 
 
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(m_constantBuffer.Get(), 0, NULL, &m_constantBufferData, 0, 0, 0);
+	context->UpdateSubresource1(pyramidConstantBuffer.Get(), 0, NULL, &pyramidConstantBufferData, 0, 0, 0);
+
 	// Each vertex is one instance of the VertexPositionColor struct.
 	VertexPositionColor;
 	UINT stride = sizeof(VertexPositionUVNormal);
@@ -369,8 +377,9 @@ void Sample3DSceneRenderer::Render(void)
 	context->IASetVertexBuffers(0, 1, pyramidVertexBuffer.GetAddressOf(), &stride, &offset);
 	context->IASetIndexBuffer(pyramidIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
 
-	//context->IASetInputLayout(pyramidInputLayout.Get());
+	context->IASetInputLayout(pyramidInputLayout.Get());
 
+	context->UpdateSubresource1(pyramidConstantBuffer.Get(), 0, NULL, &pyramidConstantBufferData, 0, 0, 0);
 
 	context->VSSetShader(pyramidVertexShader.Get(), nullptr, 0);
 	context->VSSetConstantBuffers1(0, 1, pyramidConstantBuffer.GetAddressOf(), nullptr, nullptr);
@@ -385,6 +394,8 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	// Load shaders asynchronously.
 	auto loadVSTask = DX::ReadDataAsync(L"SampleVertexShader.cso");
 	auto loadPSTask = DX::ReadDataAsync(L"SamplePixelShader.cso");
+	auto loadPyramidVSTask = DX::ReadDataAsync(L"handDrawnShapesVertexShader.cso");
+	auto loadPyramidPSTask = DX::ReadDataAsync(L"handDrawnShapesPixelShader.cso");
 
 	// After the vertex shader file is loaded, create the shader and input layout.
 	auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData)
@@ -483,7 +494,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	});
 
 
-	auto createPyramidVSTask = loadVSTask.then([this](const std::vector<byte>& fileData)
+	auto createPyramidVSTask = loadPyramidVSTask.then([this](const std::vector<byte>& fileData)
 	{
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &pyramidVertexShader));
 
@@ -491,14 +502,14 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		{
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
-
+		
 		};
-	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &pyramidInputLayout));
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &pyramidInputLayout));
 
 	});
 
 
-	auto createPyramidPSTask = loadPSTask.then([this](const std::vector<byte>& fileData)
+	auto createPyramidPSTask = loadPyramidPSTask.then([this](const std::vector<byte>& fileData)
 	{
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreatePixelShader(&fileData[0], fileData.size(), nullptr, &pyramidPixelShader));
 
@@ -511,11 +522,11 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		//Load mesh vertices. Each vertex has a position and a color.
 		static const VertexPositionColor triVertices[] =
 		{
-			{XMFLOAT3(0.0f, 0.5f, 0.0f), //top 
-			XMFLOAT3(-0.5f, 0.0f, -0.5f)},
-			{XMFLOAT3(-0.5f, 0.0f,  0.5f), 
-			XMFLOAT3(-0.5f, 0.0f, -0.5f)},
-			{XMFLOAT3(0.5f,  0.0f, 0.5f)}
+			{XMFLOAT3(0.0f, 0.5f, 0.0f), //top  0
+			XMFLOAT3(-0.5f, 0.0f, -0.5f)}, //front left 1
+			{XMFLOAT3(-0.5f, 0.0f, - 0.5f), //back left 2
+			XMFLOAT3(0.5f, 0.0f, -0.5f)}, //back right 3
+			{XMFLOAT3(0.5f,  0.0f, -0.5f)} //front right 4
 		};
 
 		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
@@ -531,14 +542,14 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	
 		static const unsigned short triIndices[] =
 		{
-			4,0,1, // -x
-			1,0,2,
+			0,1,4, 
+			0,2,1,
 
-			2,0,3, // +x
+			2,0,3, 
 			3,0,4,
 
-			1,3,4, // -y
-			1,3,2
+			4,3,1,
+			2,3,1
 
 			
 		};

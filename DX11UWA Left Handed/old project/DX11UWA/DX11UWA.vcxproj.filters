@@ -119,6 +119,12 @@
     <FxCompile Include="Content\SampleVertexShader.hlsl">
       <Filter>Content\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="handDrawnShapesPixelShader.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="handDrawnShapesVertexShader.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </FxCompile>
     <FxCompile Include="GeometryShader.hlsl">
       <Filter>Content\Shaders</Filter>
     </FxCompile>
