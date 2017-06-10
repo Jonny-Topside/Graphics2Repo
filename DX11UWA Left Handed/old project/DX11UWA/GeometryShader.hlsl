@@ -8,12 +8,12 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
 struct GSOutput
 {
 	float4 pos : SV_POSITION;
-	float2 uv : UV;
+	float2 uv : TEXCOORD0;
 	float3 normal : NORMAL;
 };
 
 [maxvertexcount(3)]
-void main(	point float4 input[1] : SV_POSITION, inout TriangleStream< GSOutput > output)
+void main(	point float4 input[1] : SV_POSITION, point float2 uvInput[1] : TEXCOORD0,inout TriangleStream< GSOutput > output)
 {
 	GSOutput pointOne;
 	GSOutput pointTwo;
@@ -25,11 +25,17 @@ void main(	point float4 input[1] : SV_POSITION, inout TriangleStream< GSOutput >
 	pointTwo = pointThree = pointOne;
 
 	pointOne.pos = input[0];
-	pointTwo.pos.x = pointOne.pos.x + 1;
-	pointTwo.pos.y = pointOne.pos.y - 1;
-	pointThree.pos.z = pointTwo.pos.z = pointOne.pos.z;
-	pointThree.pos.x = pointOne.pos.x - 1;
-	pointThree.pos.y = pointOne.pos.y - 1;
+	pointOne.uv = uvInput[0];
+	if (pointOne.uv.x >= 0.2f && pointOne.uv.x < 0.35f && pointOne.uv.y >= 0.1 && pointOne.uv.y < 0.25f)
+{
+		pointOne.uv.x = -1;
+		pointOne.uv.y = -1;
+	}
+	pointTwo.pos.x = pointOne.pos.x + 10;
+	pointTwo.pos.y = pointOne.pos.y - 10;
+	pointThree.pos.z = pointTwo.pos.z = pointOne.pos.z + 10;
+	pointThree.pos.x = pointOne.pos.x - 10;
+	pointThree.pos.y = pointOne.pos.y - 10;
 	pointTwo.uv = pointOne.uv;
 	pointThree.uv = pointOne.uv;
 	pointTwo.normal = pointOne.normal;
@@ -42,7 +48,7 @@ void main(	point float4 input[1] : SV_POSITION, inout TriangleStream< GSOutput >
 	output.Append(pointTwo);
 	output.Append(pointThree);
 
-		output.RestartStrip();
+	//	output.RestartStrip();
 	
 }
 

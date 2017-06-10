@@ -14,6 +14,12 @@ SamplerState pengSamplerState : register(s0);
 float4 main(PixelShaderInput input) : SV_TARGET
 {
 float4 pengReturnColor = pengText.Sample(pengSamplerState, input.uv);
-return pengReturnColor;//float4(input.normal, 1.0f);
+if (input.uv.x != -1 && input.uv.y != -1)
+{
+	return pengReturnColor;
+}
+else
+return float4(0,1,0,1);
+//float4(input.normal, 1.0f);
 
 }

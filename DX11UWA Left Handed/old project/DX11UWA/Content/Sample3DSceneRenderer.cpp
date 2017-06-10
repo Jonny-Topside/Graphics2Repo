@@ -387,24 +387,23 @@ void Sample3DSceneRenderer::Render(void)
 	// Draw the objects.
 	context->DrawIndexed(m_indexCount, 0, 0);
 
-	//draw third thing, topology must be pointlist
+	//GEO SHADER
 	context->GSSetShader(GeometryShader.Get(), nullptr, 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-	context->DrawIndexed(1, 0, 0);
-
-	//stride = sizeof(VertexPositionColor);
-	//
-	//context->IASetVertexBuffers(0, 1, pyramidVertexBuffer.GetAddressOf(), &stride, &offset);
-	//context->IASetIndexBuffer(pyramidIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
-	//
-	//context->IASetInputLayout(pyramidInputLayout.Get());
-	//
-	//context->UpdateSubresource1(pyramidConstantBuffer.Get(), 0, NULL, &pyramidConstantBufferData, 0, 0, 0);
-	//
-	//context->VSSetShader(pyramidVertexShader.Get(), nullptr, 0);
-	//context->VSSetConstantBuffers1(0, 1, pyramidConstantBuffer.GetAddressOf(), nullptr, nullptr);
-	//context->PSSetShader(pyramidPixelShader.Get(), nullptr, 0);
-	//context->DrawIndexed(pyramidIndexCount, 0, 0);
+	context->DrawIndexed(m_indexCount, 0, 0);
+	context->GSSetShader(nullptr, nullptr, 0);
+	stride = sizeof(VertexPositionColor);
+	
+	//PYRAMID
+	context->IASetVertexBuffers(0, 1, pyramidVertexBuffer.GetAddressOf(), &stride, &offset);
+	context->IASetIndexBuffer(pyramidIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+	context->UpdateSubresource1(pyramidConstantBuffer.Get(), 0, NULL, &pyramidConstantBufferData, 0, 0, 0);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	context->IASetInputLayout(pyramidInputLayout.Get());
+	context->VSSetShader(pyramidVertexShader.Get(), nullptr, 0);
+	context->VSSetConstantBuffers1(0, 1, pyramidConstantBuffer.GetAddressOf(), nullptr, nullptr);
+	context->PSSetShader(pyramidPixelShader.Get(), nullptr, 0);
+	context->DrawIndexed(pyramidIndexCount, 0, 0);
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
@@ -413,8 +412,15 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	// Load shaders asynchronously.
 	auto loadVSTask = DX::ReadDataAsync(L"SampleVertexShader.cso");
 	auto loadPSTask = DX::ReadDataAsync(L"SamplePixelShader.cso");
+	auto loadGSTask = DX::ReadDataAsync(L"GeometryShader.cso");
 	auto loadPyramidVSTask = DX::ReadDataAsync(L"handDrawnShapesVertexShader.cso");
 	auto loadPyramidPSTask = DX::ReadDataAsync(L"handDrawnShapesPixelShader.cso");
+
+	auto createGSTask = loadGSTask.then([this](const std::vector<byte>& fileData)
+	{
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateGeometryShader(&fileData[0], fileData.size(), nullptr, &GeometryShader));
+
+	});
 
 	// After the vertex shader file is loaded, create the shader and input layout.
 	auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData)
@@ -428,7 +434,6 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			
 		};
-		//ID3D11Device::CreateInputLayout(vertexDesc, );
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &m_inputLayout));
 	});
 
@@ -603,6 +608,7 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources(void)
 	m_constantBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
+	GeometryShader.Reset();
 	pyramidConstantBuffer.Reset();
 	pyramidIndexBuffer.Reset();
 	pyramidInputLayout.Reset();
