@@ -19,6 +19,7 @@ namespace DX11UWA
 
 	struct VertexPositionUVNormal
 	{
+		//ADD COLOR FOR THE LIGHTS
 		DirectX::XMFLOAT3 pos;
 		DirectX::XMFLOAT2 uv;
 		DirectX::XMFLOAT3 normal;

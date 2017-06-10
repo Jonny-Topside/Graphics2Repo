@@ -189,6 +189,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <Image Include="Assets\LockScreenLogo.scale-200.png" />
+    <Image Include="Assets\peng.dds" />
     <Image Include="Assets\SplashScreen.scale-200.png" />
     <Image Include="Assets\Square150x150Logo.scale-200.png" />
     <Image Include="Assets\Square44x44Logo.scale-200.png" />
@@ -200,6 +201,7 @@
     <ClInclude Include="App.h" />
     <ClInclude Include="Common\DDSTextureLoader.h" />
     <ClInclude Include="Common\DeviceResources.h" />
+    <ClInclude Include="DDSTextureLoader.h" />
     <ClInclude Include="DX11UWAMain.h" />
     <ClInclude Include="Common\DirectXHelper.h" />
     <ClInclude Include="Common\StepTimer.h" />
@@ -212,6 +214,7 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Common\DDSTextureLoader.cpp" />
     <ClCompile Include="Common\DeviceResources.cpp" />
+    <ClCompile Include="DDSTextureLoader.cpp" />
     <ClCompile Include="DX11UWAMain.cpp" />
     <ClCompile Include="Content\SampleFpsTextRenderer.cpp" />
     <ClCompile Include="Content\Sample3DSceneRenderer.cpp" />

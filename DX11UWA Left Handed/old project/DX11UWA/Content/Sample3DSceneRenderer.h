@@ -74,10 +74,14 @@ namespace DX11UWA
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	pyramidVertexBuffer;
 		ModelViewProjectionConstantBuffer	pyramidConstantBufferData;
 
+		Microsoft::WRL::ComPtr<ID3D11GeometryShader>	GeometryShader;
+		
 
 		uint32	pyramidIndexCount;
 
-
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> pengTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> pengSRV;
+		Microsoft::WRL::ComPtr<ID3D11SamplerState> pengSS;
 		// System resources for cube geometry.
 
 		ModelViewProjectionConstantBuffer	m_constantBufferData;

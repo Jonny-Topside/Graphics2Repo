@@ -1,6 +1,6 @@
 ﻿#include "pch.h"
 #include "Sample3DSceneRenderer.h"
-
+#include "DDSTextureLoader.h"
 #include "..\Common\DirectXHelper.h"
 
 using namespace DX11UWA;
@@ -40,6 +40,7 @@ bool Sample3DSceneRenderer::loadOBJ(const char * path, std::vector<VertexPositio
 		{
 			XMFLOAT2 uv;
 			fscanf_s(file, "%f %f \n", &uv.x, &uv.y);
+			uv.y = 1 - uv.y;
 			temp_uvs.push_back(uv);
 		}
 	
@@ -335,6 +336,11 @@ void Sample3DSceneRenderer::StopTracking(void)
 // Renders one frame using the vertex and pixel shaders.
 void Sample3DSceneRenderer::Render(void)
 {
+	HRESULT theResult;
+	
+	theResult = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/peng.dds", (ID3D11Resource**)pengTexture.Get(), &pengSRV);
+	ID3D11ShaderResourceView* pengSRVpointer[] = { pengSRV.Get() };
+	
 	// Loading is asynchronous. Only draw geometry after it's loaded.
 	if (!m_loadingComplete)
 	{
@@ -342,6 +348,16 @@ void Sample3DSceneRenderer::Render(void)
 	}
 
 	auto context = m_deviceResources->GetD3DDeviceContext();
+	context->PSSetShaderResources(0, 1, pengSRVpointer);
+
+	D3D11_SAMPLER_DESC pengSamplerDesc;
+	ZeroMemory(&pengSamplerDesc, sizeof(pengSamplerDesc));
+	pengSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	pengSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	pengSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	pengSamplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateSamplerState(&pengSamplerDesc, pengSS.GetAddressOf())); //&
+	context->PSSetSamplers(0, 1, pengSS.GetAddressOf());
 
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
 	XMStoreFloat4x4(&pyramidConstantBufferData.view,  XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
@@ -371,21 +387,24 @@ void Sample3DSceneRenderer::Render(void)
 	// Draw the objects.
 	context->DrawIndexed(m_indexCount, 0, 0);
 
+	//draw third thing, topology must be pointlist
+	context->GSSetShader(GeometryShader.Get(), nullptr, 0);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	context->DrawIndexed(1, 0, 0);
 
-	stride = sizeof(VertexPositionColor);
-
-	context->IASetVertexBuffers(0, 1, pyramidVertexBuffer.GetAddressOf(), &stride, &offset);
-	context->IASetIndexBuffer(pyramidIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
-
-	context->IASetInputLayout(pyramidInputLayout.Get());
-
-	context->UpdateSubresource1(pyramidConstantBuffer.Get(), 0, NULL, &pyramidConstantBufferData, 0, 0, 0);
-
-	context->VSSetShader(pyramidVertexShader.Get(), nullptr, 0);
-	context->VSSetConstantBuffers1(0, 1, pyramidConstantBuffer.GetAddressOf(), nullptr, nullptr);
-	context->PSSetShader(pyramidPixelShader.Get(), nullptr, 0);
-	context->DrawIndexed(pyramidIndexCount, 0, 0);
-
+	//stride = sizeof(VertexPositionColor);
+	//
+	//context->IASetVertexBuffers(0, 1, pyramidVertexBuffer.GetAddressOf(), &stride, &offset);
+	//context->IASetIndexBuffer(pyramidIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+	//
+	//context->IASetInputLayout(pyramidInputLayout.Get());
+	//
+	//context->UpdateSubresource1(pyramidConstantBuffer.Get(), 0, NULL, &pyramidConstantBufferData, 0, 0, 0);
+	//
+	//context->VSSetShader(pyramidVertexShader.Get(), nullptr, 0);
+	//context->VSSetConstantBuffers1(0, 1, pyramidConstantBuffer.GetAddressOf(), nullptr, nullptr);
+	//context->PSSetShader(pyramidPixelShader.Get(), nullptr, 0);
+	//context->DrawIndexed(pyramidIndexCount, 0, 0);
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
