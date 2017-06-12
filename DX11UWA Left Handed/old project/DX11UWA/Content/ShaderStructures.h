@@ -2,6 +2,15 @@
 
 namespace DX11UWA
 {
+	struct forLightsOnly
+	{
+		//put all light data: lightDir, color, 
+		DirectX::XMFLOAT3 lightDir;// = float3(0, 0, 0);
+		DirectX::XMFLOAT3 surfaceNormal;// = float3(0, 0, 0);
+		//float result = 0;
+		DirectX::XMFLOAT4 lightColor;// = float4(0, 0, 0, 0);
+		DirectX::XMFLOAT4 surfaceColor;// = float4(0, 0, 0, 0);
+	};
 	// Constant buffer used to send MVP matrices to the vertex shader.
 	struct ModelViewProjectionConstantBuffer
 	{

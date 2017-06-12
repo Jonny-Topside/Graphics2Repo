@@ -12,7 +12,6 @@ namespace DX11UWA
 	{
 	public:
 
-
 		bool loadOBJ(const char * path, std::vector<VertexPositionUVNormal> &vpuvn, std::vector<unsigned int> &outIndices);
 		Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 		//void Sample3DSceneRenderer::CreateVP(void);
@@ -32,21 +31,7 @@ namespace DX11UWA
 		void SetMousePosition(const Windows::UI::Input::PointerPoint^ pos);
 		void SetInputDeviceData(const char* kb, const Windows::UI::Input::PointerPoint^ pos);
 
-		//	struct light
-		//	{
-		//		light()
-		//		{
-		//			ZeroMemory(this, sizeof(light));
-		//		}
-		//		DirectX::XMFLOAT3	lightPos;
-		//		float range;
-		//		DirectX::XMFLOAT3	lightDir;
-		//		float cone;
-		//		DirectX::XMFLOAT3	attenuation;
-		//		float pad2;
-		//		DirectX::XMFLOAT4	ambient;
-		//		DirectX::XMFLOAT4	diffuse;
-		//	};
+	
 
 	private:
 		void Rotate(float radians);
@@ -58,10 +43,10 @@ namespace DX11UWA
 		// Cached pointer to device resources.
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
 		// Direct3D resources for cube geometry.
-		Microsoft::WRL::ComPtr<ID3D11InputLayout>	m_inputLayout;
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader;
 		//MULTIPLE
+		Microsoft::WRL::ComPtr<ID3D11InputLayout>	m_inputLayout;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer;
@@ -74,13 +59,20 @@ namespace DX11UWA
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	pyramidVertexBuffer;
 		ModelViewProjectionConstantBuffer	pyramidConstantBufferData;
 
+		//geometry shader 
 		Microsoft::WRL::ComPtr<ID3D11GeometryShader>	GeometryShader;
-		
+
+		//plane vars
+		Microsoft::WRL::ComPtr<ID3D11Buffer>	planeConstantBuffer;
+
+		//LIGHT CONSTANT BUFFER THINGS
+		Microsoft::WRL::ComPtr<ID3D11Buffer> lightBuffer;
+		forLightsOnly lightBufferData;
 
 		uint32	pyramidIndexCount;
 
-		Microsoft::WRL::ComPtr<ID3D11Texture2D> pengTexture;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> pengSRV;
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> pengTexture;
 		Microsoft::WRL::ComPtr<ID3D11SamplerState> pengSS;
 		// System resources for cube geometry.
 
@@ -95,7 +87,7 @@ namespace DX11UWA
 		bool	m_tracking;
 
 		// Data members for keyboard and mouse input
-		char	m_kbuttons[256];
+		char m_kbuttons[256];
 		Windows::UI::Input::PointerPoint^ m_currMousePos;
 		Windows::UI::Input::PointerPoint^ m_prevMousePos;
 
