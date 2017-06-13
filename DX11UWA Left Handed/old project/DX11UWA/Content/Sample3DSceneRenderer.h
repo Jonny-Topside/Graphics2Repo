@@ -64,6 +64,15 @@ namespace DX11UWA
 
 		//plane vars
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	planeConstantBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>	planeVertexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> planeIndexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11InputLayout>	planeInputLayout;
+		ModelViewProjectionConstantBuffer planeConstantBufferData;
+
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> planeSRV;
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> planeTexture;
+		Microsoft::WRL::ComPtr<ID3D11SamplerState> planeSS;
+		uint32	planeIndexCount;
 
 		//LIGHT CONSTANT BUFFER THINGS
 		Microsoft::WRL::ComPtr<ID3D11Buffer> lightBuffer;

@@ -216,6 +216,7 @@ void Sample3DSceneRenderer::Rotate(float radians)
 	// Prepare to pass the updated model matrix to the shader
 	XMStoreFloat4x4(&m_constantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
 	XMStoreFloat4x4(&pyramidConstantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
+	XMStoreFloat4x4(&planeConstantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
 
 	//ME TRYING TO ROTATE MY OWN THING
 	//XMStoreFloat4x4(&myTriConstantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
@@ -339,15 +340,26 @@ void Sample3DSceneRenderer::StopTracking(void)
 // Renders one frame using the vertex and pixel shaders.
 void Sample3DSceneRenderer::Render(void)
 {
-	HRESULT theResult;
-
-	theResult = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/peng.dds", (ID3D11Resource**)pengTexture.Get(), &pengSRV);
+	HRESULT r;
+	//PENG
+	r = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/peng.dds", (ID3D11Resource**)pengTexture.Get(), &pengSRV);
 	ID3D11ShaderResourceView* pengSRVpointer[] = { pengSRV.Get() };
 
+	//PLANE
+	CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/bleachedWood_seamless.dds", (ID3D11Resource**)planeTexture.Get(), &planeSRV);
+	ID3D11ShaderResourceView* planeSRVpointer[] = { planeSRV.Get() };
 	// Loading is asynchronous. Only draw geometry after it's loaded.
 	if (!m_loadingComplete)
 	{
 		return;
+	}
+
+	{
+	int arr1[34];
+	int arr2[] = { 34 };
+	char arr3[32] = { 1,2,3 };
+	float arr4[2];
+	unsigned int arr5[] = {34};
 	}
 
 	auto context = m_deviceResources->GetD3DDeviceContext();
@@ -364,6 +376,8 @@ void Sample3DSceneRenderer::Render(void)
 	}
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
 	XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+
 	//XMStoreFloat4x4(&lightBufferData, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
 
 	XMMatrixTranslation(200, 200, 200);
@@ -372,6 +386,8 @@ void Sample3DSceneRenderer::Render(void)
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(m_constantBuffer.Get(), 0, NULL, &m_constantBufferData, 0, 0, 0);
 	context->UpdateSubresource1(pyramidConstantBuffer.Get(), 0, NULL, &pyramidConstantBufferData, 0, 0, 0);
+	context->UpdateSubresource1(planeConstantBuffer.Get(), 0, NULL, &planeConstantBufferData, 0, 0, 0);
+
 	//context->UpdateSubresource1(lightBuffer.Get(), 0, NULL, &lightBufferData, 0, 0, 0);
 	// Each vertex is one instance of the VertexPositionColor struct.
 	VertexPositionColor;
@@ -393,6 +409,7 @@ void Sample3DSceneRenderer::Render(void)
 	context->PSSetShader(m_pixelShader.Get(), nullptr, 0);
 	// Draw the objects.
 	context->DrawIndexed(m_indexCount, 0, 0);
+	
 
 	//GEO SHADER
 	context->GSSetShader(GeometryShader.Get(), nullptr, 0);
@@ -408,10 +425,38 @@ void Sample3DSceneRenderer::Render(void)
 	context->UpdateSubresource1(pyramidConstantBuffer.Get(), 0, NULL, &pyramidConstantBufferData, 0, 0, 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	context->IASetInputLayout(pyramidInputLayout.Get());
-	context->VSSetShader(pyramidVertexShader.Get(), nullptr, 0);
+	//context->VSSetShader(pyramidVertexShader.Get(), nullptr, 0);
 	context->VSSetConstantBuffers1(0, 1, pyramidConstantBuffer.GetAddressOf(), nullptr, nullptr);
-	context->PSSetShader(pyramidPixelShader.Get(), nullptr, 0);
+	//context->PSSetShader(pyramidPixelShader.Get(), nullptr, 0);
 	context->DrawIndexed(pyramidIndexCount, 0, 0);
+
+	//PLANE
+
+	context->PSSetShaderResources(0, 1, planeSRVpointer);
+	{
+		D3D11_SAMPLER_DESC planeSamplerDesc;
+		ZeroMemory(&planeSamplerDesc, sizeof(planeSamplerDesc));
+		planeSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		planeSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		planeSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		planeSamplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateSamplerState(&planeSamplerDesc, planeSS.GetAddressOf())); //&
+		context->PSSetSamplers(0, 1, planeSS.GetAddressOf());
+	}
+
+
+
+	stride = sizeof(VertexPositionUVNormal);
+	context->IASetVertexBuffers(0, 1, planeVertexBuffer.GetAddressOf(), &stride, &offset);
+	context->IASetIndexBuffer(planeIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+	context->UpdateSubresource1(planeConstantBuffer.Get(), 0, NULL, &planeConstantBufferData, 0, 0, 0);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	context->IASetInputLayout(planeInputLayout.Get());
+	//context->VSSetShader(pyramidVertexShader.Get(), nullptr, 0);
+	context->VSSetConstantBuffers1(0, 1, planeConstantBuffer.GetAddressOf(), nullptr, nullptr);
+	//context->PSSetShader(pyramidPixelShader.Get(), nullptr, 0);
+	context->DrawIndexed(planeIndexCount, 0, 0);
+
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
@@ -435,6 +480,9 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	//CREATING LIGHT BUFFER AND DESCRIPTION
 		//CD3D11_BUFFER_DESC lightBufferDesc(sizeof(forLightsOnly), D3D11_BIND_CONSTANT_BUFFER);
 		//DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&lightBufferDesc, nullptr, &lightBuffer));
+
+	//THIS IS ALL FOR CREATING THE PLANE
+	
 	auto createPlaneVSTask = loadVSTask.then([this](const std::vector<byte>& fileData)
 	{
 
@@ -445,9 +493,8 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
 
 		};
-		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &m_inputLayout));
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &planeInputLayout));
 	});
-
 	auto createPlanePSTask = loadPSTask.then([this](const std::vector<byte>& fileData)
 	{
 
@@ -456,10 +503,33 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	});
 	auto createPlaneTask = (createPlanePSTask && createPlaneVSTask).then([this]()
 	{
+		std::vector<VertexPositionUVNormal> vertUvNormal;
+		std::vector<unsigned int> out_indices;
+
+		bool res = loadOBJ("Assets/PLANE.obj", vertUvNormal, out_indices);
+
+		D3D11_SUBRESOURCE_DATA vertexBufferData;
+		vertexBufferData.pSysMem = vertUvNormal.data();
+		vertexBufferData.SysMemPitch = 0;
+		vertexBufferData.SysMemSlicePitch = 0;
+		
+		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(VertexPositionUVNormal) * vertUvNormal.size(), D3D11_BIND_VERTEX_BUFFER);
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &planeVertexBuffer));
+		
+		planeIndexCount = out_indices.size();
+
+		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+		indexBufferData.pSysMem = out_indices.data();
+		indexBufferData.SysMemPitch = 0;
+		indexBufferData.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(unsigned int) * out_indices.size(), D3D11_BIND_INDEX_BUFFER);
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&indexBufferDesc, &indexBufferData, &planeIndexBuffer));
 
 	});
+	
 
-
+	//ALL THINGS FOR DRAWING THE PENGUIN
+	{
 	// After the vertex shader file is loaded, create the shader and input layout.
 	auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData)
 	{
@@ -474,7 +544,6 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		};
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &m_inputLayout));
 	});
-
 	// After the pixel shader file is loaded, create the shader and constant buffer.
 	auto createPSTask = loadPSTask.then([this](const std::vector<byte>& fileData)
 	{
@@ -483,9 +552,6 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&constantBufferDesc, nullptr, &m_constantBuffer));
 	});
-
-
-
 	// Once both shaders are loaded, create the mesh.
 	auto createCubeTask = (createPSTask && createVSTask).then([this]()
 	{
@@ -556,6 +622,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_indexBuffer));
 
 	});
+	}
 
 
 	auto createPyramidVSTask = loadPyramidVSTask.then([this](const std::vector<byte>& fileData)

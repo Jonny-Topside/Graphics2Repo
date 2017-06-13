@@ -67,7 +67,6 @@
     <ClCompile Include="Common\DeviceResources.cpp">
       <Filter>Common\Source</Filter>
     </ClCompile>
-    <ClCompile Include="DDSTextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Content\Sample3DSceneRenderer.h">
@@ -109,6 +108,9 @@
     <Image Include="Assets\peng.dds">
       <Filter>Assets</Filter>
     </Image>
+    <Image Include="Assets\bleachedWood_seamless.dds">
+      <Filter>Assets</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest" />
@@ -133,5 +135,8 @@
     <FxCompile Include="GeometryShader.hlsl">
       <Filter>Content\Shaders</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="Assets\PLANE.obj" />
   </ItemGroup>
 </Project>

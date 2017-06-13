@@ -1,22 +1,17 @@
 
-float clamp(float x, float maxN, float minN)
-{
-	return min(maxN, max(x, minN));
-}
-
 struct light
 {
 	float rat; float4 dir;
-	//float4 pos;	
+	float4 pos;
 	float4 color;
+	float4 coneDir;
+	float4 diffuse;
+	float3 att;
+	float4 ambient;
+	float range;
 };
 
-//struct Light
-//{
-//	float3 direction;
-//	float4 ambient;
-//	float4 diffuse;
-//};
+
 
 
 
@@ -26,6 +21,7 @@ struct PixelShaderInput
 	float4 pos : SV_POSITION;
 	float2 uv : UV;
 	float3 normal : NORMAL;
+	float4 wPos : WORLDPOSITION;
 	//float4 color : COLOR;
 	//ADDED A COLOR  
 };
@@ -36,32 +32,82 @@ SamplerState pengSamplerState : register(s0);
 // A pass-through function for the (interpolated) color data.
 float4 main(PixelShaderInput input) : SV_TARGET
 {
+	//ambient is multiplying texture color by small scalar value, then add to final color
+	float4 colorToReturn = pengText.Sample(pengSamplerState, input.uv);
+	float4 directionReturnVal;
+	float4 pointReturnVal;
 	light lighter;
-	//input.normal = normalize(input.normal);
-float4 colorToReturn = pengText.Sample(pengSamplerState, input.uv);
-//this is all lighting things
-lighter.color = float4(1, 1, 1, 0.4f);
-lighter.dir = float4(0.33f, 0.33f, -0.33f, 1);
-lighter.rat = clamp(dot(-lighter.dir, input.normal), 1, 0);
-//ligher.color.r *= lighter.rat;
-//lighter.color.g *= lighter.rat;
-//lighter.color.b *= lighter.rat;
-//lighter.color.a *= lighter.rat;
-lighter.color = lighter.color * lighter.rat;
-//return lighter.color;
-return mul(lighter.color, colorToReturn);
+
+	//float4 returnVal = 0;
+	float surfaceRat = 0;
+	float coneRat = 0;
+	lighter.rat = 0;
+	//this is all lighting things
+	lighter.ambient = colorToReturn * 0.05f;
+	// lighter.range = 0;
+	lighter.color = float4(1, 1, 1, 1.0f);
+	lighter.dir = float4(0.33f, 0.33f, -0.33f, 1);
+		lighter.coneDir = float4(0.33f, 0.33f, 1.0f, 1);
+		//DIRECTIONAL LIGHT
+		lighter.rat = clamp(dot(-lighter.dir.xyz, input.normal), 0, 1);
+		directionReturnVal = lighter.rat * lighter.color * colorToReturn;
 
 
-//finalColor = diffuse * light.ambient;
-//finalColor += saturate(mul(light.dir, input.normal) * light.diffuse * diffuse);
-//return float4(finalColor, diffuse.a);
-//if (input.uv.x != -1 && input.uv.y != -1)
-//{
-	//return colorToReturn;
+		//POINT LIGHT
+		lighter.color = float4(1, 0, 0.0f, 1.0f);
+		lighter.pos = float4(0.0F, 0.0f, 0.0f, 1);
+		lighter.dir = normalize(lighter.pos - input.wPos);
+		lighter.rat += saturate(dot(lighter.dir.xyz, input.normal.xyz));
+		float attenuation = 1.0f - clamp(length(lighter.pos - input.wPos) / 15.1f, 0, 1);
+		pointReturnVal = lighter.rat * lighter.color * colorToReturn * attenuation;
+		return saturate(pointReturnVal + directionReturnVal + lighter.ambient);
 
-	//}
-	//else
-	//return float4(input.normal, 1.0f);
-	//return float4(0,1,0,1);
+		
+		//SPOTLIGHT
+		//lighter.dir = normalize(lighter.pos - input.wPos);
+		//surfaceRat = clamp(dot(-lighter.dir, lighter.coneDir));
+		//float spotFactor = (surfaceRat > lighter.coneRat) ? 1 : 0;
+		//lighter.rat = clamp(dot(lighter.dir, input.normal));
+		//float3 endColor = float3(0.0f, 0.0f, 0.0f);
+		//float3 lightVector = lighter.pos - input.pos;
+		//float d = length(lightVector);
+		//float3 finalAmbient = colorToReturn * lighter.ambient;
+		//if (d > lighter.range)
+		//	return float4(finalAmbient, colorToReturn.a);
+		//lightVector = lightVector / d;
+		//float lightAmount = dot(lightVector, input.normal);
+		//if (lightAmount > 0.0f)
+		//{
+		//	endColor += lightAmount * colorToReturn * lighter.diffuse;
+		//	endColor /= lighter.att[0] + (lighter.att[1] * d) + (lighter.att[2] * (d * d));
+		//}
+		//endColor = saturate(endColor + finalAmbient);
+		//return float4(endColor, colorToReturn.a);
+		//}
+		////}
+
+		//SPOTLIGHT
+		//{
+		//lighter.dir = normalize(lighter.pos - input.pos);
+		//float surfaceRat = clamp(dot(-lighter.dir, lighter.coneDir),0,1);
+		//float spotFactor = (surfaceRat > coneRat) ? 1 : 0;
+		//lighter.rat = clamp(dot(lighter.dir, input.normal),0,1);
+		//returnVal = spotFactor * lighter.rat * lighter.color * colorToReturn;
+		//
+		//return saturate(returnVal);
+		//}
+
+
+		//finalColor = diffuse * light.ambient;
+		//finalColor += saturate(mul(light.dir, input.normal) * light.diffuse * diffuse);
+		//return float4(finalColor, diffuse.a);
+		//if (input.uv.x != -1 && input.uv.y != -1)
+		//{
+		//return colorToReturn;
+
+		//}
+		//else
+		//return float4(input.normal, 1.0f);
+		//return float4(0,1,0,1);
 
 }
