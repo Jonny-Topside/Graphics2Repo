@@ -1,14 +1,17 @@
 
 struct light
 {
-	float rat; float4 dir;
-	float4 pos;
-	float4 color;
-	float4 coneDir;
+	
 	float4 diffuse;
-	float3 att;
+	float4 coneDir;
+	float4 conePos;
 	float4 ambient;
+	float4 color;
 	float range;
+	float4 dir;
+
+	float4 pos;
+	float3 att;
 };
 
 
@@ -36,39 +39,44 @@ float4 main(PixelShaderInput input) : SV_TARGET
 	float4 colorToReturn = pengText.Sample(pengSamplerState, input.uv);
 	float4 directionReturnVal;
 	float4 pointReturnVal;
+	float4 spotLightResult;
 	light lighter;
-
-	//float4 returnVal = 0;
-	float surfaceRat = 0;
-	float coneRat = 0;
-	lighter.rat = 0;
-	//this is all lighting things
-	lighter.ambient = colorToReturn * 0.05f;
-	// lighter.range = 0;
-	lighter.color = float4(1, 1, 1, 1.0f);
+	//INITIALIZING LIGHT STRUCT
 	lighter.dir = float4(0.33f, 0.33f, -0.33f, 1);
-		lighter.coneDir = float4(0.33f, 0.33f, 1.0f, 1);
-		//DIRECTIONAL LIGHT
-		lighter.rat = clamp(dot(-lighter.dir.xyz, input.normal), 0, 1);
-		directionReturnVal = lighter.rat * lighter.color * colorToReturn;
+	lighter.coneDir = float4(0, 0, 1.0f, 1.0f);
+	lighter.ambient = colorToReturn * 0.05f;
+	//RATIOS
+	float surfaceRat = 0;
+	float lightRat = 0;
+	float coneRat = 0;
+
+
+		lighter.coneDir = float4(110.0f, 10.0f, 111.0f, 1);
+		//DIRECTIONAL LIGHT : WHITE
+		lighter.color = float4(0, 0, 1, 1.0f);
+		 lightRat = clamp(dot(-lighter.dir.xyz, input.normal), 0, 1);
+		 directionReturnVal = lightRat * lighter.color * colorToReturn;
 
 
 		//POINT LIGHT
-		lighter.color = float4(1, 0, 0.0f, 1.0f);
-		lighter.pos = float4(0.0F, 0.0f, 0.0f, 1);
-		lighter.dir = normalize(lighter.pos - input.wPos);
-		lighter.rat += saturate(dot(lighter.dir.xyz, input.normal.xyz));
-		float attenuation = 1.0f - clamp(length(lighter.pos - input.wPos) / 15.1f, 0, 1);
-		pointReturnVal = lighter.rat * lighter.color * colorToReturn * attenuation;
-		return saturate(pointReturnVal + directionReturnVal + lighter.ambient);
+		 lighter.color = float4(1, 0, 0.0f, 1.0f);
+		 lighter.pos = float4(0.0F, 0.0f, 0.0f, 1);
+		 lighter.dir = normalize(lighter.pos - input.wPos);
+		 lightRat += saturate(dot(lighter.dir.xyz, input.normal.xyz));
+		 float attenuation = 1.0f - clamp(length(lighter.pos - input.wPos) / 15.1f, 0, 1);
+		 pointReturnVal = lightRat * lighter.color * colorToReturn * attenuation;
 
 		
-		//SPOTLIGHT
-		//lighter.dir = normalize(lighter.pos - input.wPos);
-		//surfaceRat = clamp(dot(-lighter.dir, lighter.coneDir));
-		//float spotFactor = (surfaceRat > lighter.coneRat) ? 1 : 0;
-		//lighter.rat = clamp(dot(lighter.dir, input.normal));
-		//float3 endColor = float3(0.0f, 0.0f, 0.0f);
+		//SPOTLIGHT : YELLOW
+		lighter.conePos = float4(0.0f, 1.0f, -0.1f, 1.0f);
+		lighter.color = float4(1, 1, 0.0f, 1.0f);
+		lighter.dir = normalize(lighter.conePos - input.wPos);
+		surfaceRat = clamp(dot(-lighter.dir, lighter.coneDir),0,1);
+		float spotFactor = (surfaceRat > coneRat) ? 1 : 0;
+		lightRat = clamp(dot(lighter.dir, input.normal),0,1);
+		spotLightResult = spotFactor * lightRat * lighter.color * colorToReturn;
+		return saturate(spotLightResult + (directionReturnVal + pointReturnVal) + lighter.ambient);
+
 		//float3 lightVector = lighter.pos - input.pos;
 		//float d = length(lightVector);
 		//float3 finalAmbient = colorToReturn * lighter.ambient;
