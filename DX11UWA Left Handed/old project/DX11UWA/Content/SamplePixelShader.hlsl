@@ -52,17 +52,17 @@ float4 main(PixelShaderInput input) : SV_TARGET
 
 
 		lighter.coneDir = float4(110.0f, 10.0f, 111.0f, 1);
-		//DIRECTIONAL LIGHT : WHITE
+		//DIRECTIONAL LIGHT : BLUE
 		lighter.color = float4(0, 0, 1, 1.0f);
 		 lightRat = clamp(dot(-lighter.dir.xyz, input.normal), 0, 1);
 		 directionReturnVal = lightRat * lighter.color * colorToReturn;
 
 
-		//POINT LIGHT
+		//POINT LIGHT : RED
 		 lighter.color = float4(1, 0, 0.0f, 1.0f);
 		 lighter.pos = float4(0.0F, 0.0f, 0.0f, 1);
 		 lighter.dir = normalize(lighter.pos - input.wPos);
-		 lightRat += saturate(dot(lighter.dir.xyz, input.normal.xyz));
+		 lightRat = saturate(dot(lighter.dir.xyz, input.normal.xyz));
 		 float attenuation = 1.0f - clamp(length(lighter.pos - input.wPos) / 15.1f, 0, 1);
 		 pointReturnVal = lightRat * lighter.color * colorToReturn * attenuation;
 
