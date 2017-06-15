@@ -190,11 +190,6 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		Rotate(radians);
 	}
 
-	//lights.lightPos.x = m_camera._41;
-	//lights.lightPos.y = m_camera._42;
-	//lights.lightPos.z = m_camera._43;
-	//			
-	//lights.lightDir.x =   - lights.lightPos.x;
 	// Update or move camera here
 	UpdateCamera(timer, 1.0f, 0.75f);
 
@@ -409,7 +404,8 @@ void Sample3DSceneRenderer::Render(void)
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	//context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	context->DrawIndexed(m_indexCount, 0, 0);
+	//context->DrawIndexed(m_indexCount, 0, 0);
+	context->DrawIndexedInstanced(m_indexCount, 3, 0, 0, 0);
 	context->GSSetShader(nullptr, nullptr, 0);
 
 	//PLANE
@@ -457,6 +453,8 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	auto loadGSTask = DX::ReadDataAsync(L"GeometryShader.cso");
 	auto loadPyramidVSTask = DX::ReadDataAsync(L"handDrawnShapesVertexShader.cso");
 	auto loadPyramidPSTask = DX::ReadDataAsync(L"handDrawnShapesPixelShader.cso");
+	auto loadSkyboxVSTask = DX::ReadDataAsync(L"SKYBOXVS.cso");
+	auto loadSkyboxPSTask = DX::ReadDataAsync(L"SKYBOXPS.cso");
 
 	//CREATING GEOMETRY SHADER
 	auto createGSTask = loadGSTask.then([this](const std::vector<byte>& fileData)
@@ -465,6 +463,20 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 
 	});
 
+	auto createSBTask = loadSkyboxVSTask.then([this](const std::vector<byte>& fileData)
+	{
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &pyramidVertexShader));
+
+		static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+
+		};
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &pyramidInputLayout));
+
+
+	});
 	//CREATING LIGHT BUFFER AND DESCRIPTION
 		//CD3D11_BUFFER_DESC lightBufferDesc(sizeof(forLightsOnly), D3D11_BIND_CONSTANT_BUFFER);
 		//DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&lightBufferDesc, nullptr, &lightBuffer));
@@ -612,7 +624,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		});
 	}
 
-
+	//CREATING PYRAMID
 	auto createPyramidVSTask = loadPyramidVSTask.then([this](const std::vector<byte>& fileData)
 	{
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &pyramidVertexShader));

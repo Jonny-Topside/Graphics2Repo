@@ -11,7 +11,7 @@ namespace DX11UWA
 	class Sample3DSceneRenderer
 	{
 	public:
-
+		//FUNCTIONS
 		bool loadOBJ(const char * path, std::vector<VertexPositionUVNormal> &vpuvn, std::vector<unsigned int> &outIndices);
 		Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 		//void Sample3DSceneRenderer::CreateVP(void);
@@ -21,35 +21,34 @@ namespace DX11UWA
 		void CreateDeviceDependentResources(void);
 		void Update(DX::StepTimer const& timer);
 		void TrackingUpdate(float positionX);
-
 		void StartTracking(void);
 		void StopTracking(void);
 		void Render(void);
-
 		// Helper functions for keyboard and mouse input
 		void SetKeyboardButtons(const char* list);
 		void SetMousePosition(const Windows::UI::Input::PointerPoint^ pos);
 		void SetInputDeviceData(const char* kb, const Windows::UI::Input::PointerPoint^ pos);
-
-	
-
 	private:
 		void Rotate(float radians);
 		void UpdateCamera(DX::StepTimer const& timer, float const moveSpd, float const rotSpd);
 
-
-
 	private:
+		//RESOURCES
 		// Cached pointer to device resources.
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
 		// Direct3D resources for cube geometry.
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader;
 		//MULTIPLE
+		ModelViewProjectionConstantBuffer	m_constantBufferData;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	m_inputLayout;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> pengSRV;
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> pengTexture;
+		Microsoft::WRL::ComPtr<ID3D11SamplerState> pengSS;
+		uint32	m_indexCount;
 		//pyramid vars
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	pyramidVertexShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	pyramidPixelShader;
@@ -58,37 +57,23 @@ namespace DX11UWA
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		pyramidIndexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	pyramidVertexBuffer;
 		ModelViewProjectionConstantBuffer	pyramidConstantBufferData;
-
+		uint32	pyramidIndexCount;
 		//geometry shader 
 		Microsoft::WRL::ComPtr<ID3D11GeometryShader>	GeometryShader;
-
 		//plane vars
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	planeConstantBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	planeVertexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> planeIndexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	planeInputLayout;
 		ModelViewProjectionConstantBuffer planeConstantBufferData;
-
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> planeSRV;
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> planeTexture;
 		Microsoft::WRL::ComPtr<ID3D11SamplerState> planeSS;
 		uint32	planeIndexCount;
-
-		//LIGHT CONSTANT BUFFER THINGS
-		Microsoft::WRL::ComPtr<ID3D11Buffer> lightBuffer;
-		forLightsOnly lightBufferData;
-
-		uint32	pyramidIndexCount;
-
-		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> pengSRV;
-		Microsoft::WRL::ComPtr<ID3D11Texture2D> pengTexture;
-		Microsoft::WRL::ComPtr<ID3D11SamplerState> pengSS;
-		// System resources for cube geometry.
-
-		ModelViewProjectionConstantBuffer	m_constantBufferData;
-		uint32	m_indexCount;
-
-
+		 
+		//SKYBOX VARIABLES
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>	skyBoxVertexShader;
+		Microsoft::WRL::ComPtr<ID3D11PixelShader>	skyboxPixelShader;
 
 		// Variables used with the rendering loop.
 		bool	m_loadingComplete;

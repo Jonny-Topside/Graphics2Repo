@@ -60,7 +60,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
 
 		//POINT LIGHT : RED
 		 lighter.color = float4(1, 0, 0.0f, 1.0f);
-		 lighter.pos = float4(0.0F, 0.0f, 0.0f, 1);
+		 lighter.pos = float4(0.0F, 0.0f, 0.0f, 1);// *sin(180);
 		 lighter.dir = normalize(lighter.pos - input.wPos);
 		 lightRat = saturate(dot(lighter.dir.xyz, input.normal.xyz));
 		 float attenuation = 1.0f - clamp(length(lighter.pos - input.wPos) / 15.1f, 0, 1);

@@ -24,8 +24,14 @@ void main(point float4 input[1] : SV_POSITION, point float2 uvInput[1] : TEXCOOR
 	pointOne.normal = float3(0, 0, 0);
 	pointTwo = pointThree = pointOne;
 
-	pointOne.pos = input[0] - 1;
-	pointOne.pos.x -= 3;
+	pointOne.pos = input[0];// -1;
+
+	//pointOne.pos.x = input[0].x - 1;
+	//pointOne.pos.y = input[0].y - 1;
+	//pointOne.pos.z = input[0].z - 1;
+	//pointOne.pos.w = input[0].w;
+
+	//pointOne.pos.x -= 3;
 	pointOne.uv = uvInput[0];
 	if (pointOne.uv.x >= 0.2f && pointOne.uv.x < 0.35f && pointOne.uv.y >= 0.1 && pointOne.uv.y < 0.25f)
 	{
@@ -50,23 +56,23 @@ void main(point float4 input[1] : SV_POSITION, point float2 uvInput[1] : TEXCOOR
 	output.Append(pointThree);
 
 	output.RestartStrip();
-
-	pointOne.pos = input[0];
-	pointOne.pos.x += 3;
-	pointOne.uv = uvInput[0];
-
-	pointTwo.pos.x = pointOne.pos.x + 100;
-	pointTwo.pos.y = pointOne.pos.y - 100;
-	pointThree.pos.z = pointTwo.pos.z = pointOne.pos.z + 100;
-	pointThree.pos.x = pointOne.pos.x - 100;
-	pointThree.pos.y = pointOne.pos.y - 100;
-	pointTwo.uv = pointOne.uv;
-	pointThree.uv = pointOne.uv;
-	pointTwo.normal = pointOne.normal;
-	pointThree.normal = pointOne.normal;
-
-	output.Append(pointOne);
-	output.Append(pointTwo);
-	output.Append(pointThree);
+	//
+	//pointOne.pos = input[0];
+	//pointOne.pos.x += 3;
+	//pointOne.uv = uvInput[0];
+	//
+	//pointTwo.pos.x = pointOne.pos.x + 100;
+	//pointTwo.pos.y = pointOne.pos.y - 100;
+	//pointThree.pos.z = pointTwo.pos.z = pointOne.pos.z + 100;
+	//pointThree.pos.x = pointOne.pos.x - 100;
+	//pointThree.pos.y = pointOne.pos.y - 100;
+	//pointTwo.uv = pointOne.uv;
+	//pointThree.uv = pointOne.uv;
+	//pointTwo.normal = pointOne.normal;
+	//pointThree.normal = pointOne.normal;
+	//
+	//output.Append(pointOne);
+	//output.Append(pointTwo);
+	//output.Append(pointThree);
 }
 

@@ -139,5 +139,8 @@
     <FxCompile Include="SKYBOXPS.hlsl">
       <Filter>Content\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="SKYBOXVS.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
