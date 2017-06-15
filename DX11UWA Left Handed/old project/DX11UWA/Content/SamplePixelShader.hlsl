@@ -50,6 +50,13 @@ float4 main(PixelShaderInput input) : SV_TARGET
 	float lightRat = 0;
 	float coneRat = 0;
 
+	//colorToReturn.a /= 10;
+	//colorToReturn.r /= 10;
+	//colorToReturn.g /= 10;
+	//colorToReturn.b /= 10;
+
+	//colorToReturn = (colorToReturn.r *colorToReturn.g*colorToReturn.b);
+
 
 		lighter.coneDir = float4(110.0f, 10.0f, 111.0f, 1);
 		//DIRECTIONAL LIGHT : BLUE
@@ -71,5 +78,11 @@ float4 main(PixelShaderInput input) : SV_TARGET
 		float spotFactor = (surfaceRat > coneRat) ? 1 : 0;
 		lightRat = clamp(dot(lighter.dir, input.normal),0,1);
 		spotLightResult = spotFactor * lightRat * lighter.color * colorToReturn;
+		//if (input.pos.w == 1)
+		//{
+		//colorToReturn = float4(1, 1.0f / 10, 0, 0);
+		//return saturate(spotLightResult + (directionReturnVal + pointReturnVal) + lighter.ambient + colorToReturn);
+		//}
+		//else
 		return saturate(spotLightResult + (directionReturnVal + pointReturnVal) + lighter.ambient);
 }

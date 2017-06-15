@@ -119,6 +119,9 @@
     <None Include="DX11UWA_TemporaryKey.pfx" />
     <None Include="Assets\peng.obj" />
     <None Include="Assets\PLANE.obj" />
+    <None Include="SKYBOXPS.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Content\SamplePixelShader.hlsl">
@@ -136,7 +139,7 @@
     <FxCompile Include="GeometryShader.hlsl">
       <Filter>Content\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="SKYBOXPS.hlsl">
+    <FxCompile Include="SKYBOXVS.hlsl">
       <Filter>Content\Shaders</Filter>
     </FxCompile>
   </ItemGroup>

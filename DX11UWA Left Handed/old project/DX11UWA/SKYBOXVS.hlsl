@@ -1,15 +1,25 @@
-//cbuffer constBuffer {
-//	float4x4 WorldViewProj;
-//};
-//
+
+cbuffer skyBuffer {
+	float4x4 wvp;
+};
+
+struct VertexShaderInput
+{
+	float3 pos : POSITION;
+	float2 uv : UV;
+};
  struct PixelShaderInput
  {
  	float4 pos : SV_POSITION;
- 	float2 uv : UV; 
+ 	float3 uv : UV; 
  };
-PixelShaderInput SKYBOX_VS(float3 pos : POSITION, float2 uv : UV, float3 normal : NORMAL)
+PixelShaderInput main(VertexShaderInput input)
 {
-//	PixelShaderInput output = (PixelShaderInput)0;
-//	output.pos = mul(float4(pos, 1.0f), WVP)
-//
+	PixelShaderInput output;
+	float4 pos = mul(float4(input.pos, 1.0f), wvp).xyzw;
+
+	output.pos = pos;
+	output.uv = input.pos;
+
+	return output;
 }

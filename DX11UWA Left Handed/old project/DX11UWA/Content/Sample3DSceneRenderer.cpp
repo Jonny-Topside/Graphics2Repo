@@ -453,7 +453,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	auto loadGSTask = DX::ReadDataAsync(L"GeometryShader.cso");
 	auto loadPyramidVSTask = DX::ReadDataAsync(L"handDrawnShapesVertexShader.cso");
 	auto loadPyramidPSTask = DX::ReadDataAsync(L"handDrawnShapesPixelShader.cso");
-	//auto loadSkyboxVSTask = DX::ReadDataAsync(L"SKYBOXVS.cso");
+	auto loadSkyboxVSTask = DX::ReadDataAsync(L"SKYBOXVS.cso");
 	//auto loadSkyboxPSTask = DX::ReadDataAsync(L"SKYBOXPS.cso");
 
 	//CREATING GEOMETRY SHADER

@@ -4,7 +4,7 @@
 struct PixelShaderInput
 {
 	float4 pos : SV_POSITION;
-	float2 uv : UV;
+	float3 uv : UV;
 };
 //THIS IS OK, DO NOT DELET
 TextureCube skyBox : register(t0);
