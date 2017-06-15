@@ -68,7 +68,7 @@ float4 main(PixelShaderInput input) : SV_TARGET
 
 		
 		//SPOTLIGHT : YELLOW
-		lighter.conePos = float4(0.0f, 1.0f, -0.1f, 1.0f);
+		lighter.conePos = float4(0.0f, 0.7f, 0.0f, 1.0f);
 		lighter.color = float4(1, 1, 0.0f, 1.0f);
 		lighter.dir = normalize(lighter.conePos - input.wPos);
 		surfaceRat = clamp(dot(-lighter.dir, lighter.coneDir),0,1);
@@ -76,46 +76,8 @@ float4 main(PixelShaderInput input) : SV_TARGET
 		lightRat = clamp(dot(lighter.dir, input.normal),0,1);
 		spotLightResult = spotFactor * lightRat * lighter.color * colorToReturn;
 		return saturate(spotLightResult + (directionReturnVal + pointReturnVal) + lighter.ambient);
+ 
 
-		//float3 lightVector = lighter.pos - input.pos;
-		//float d = length(lightVector);
-		//float3 finalAmbient = colorToReturn * lighter.ambient;
-		//if (d > lighter.range)
-		//	return float4(finalAmbient, colorToReturn.a);
-		//lightVector = lightVector / d;
-		//float lightAmount = dot(lightVector, input.normal);
-		//if (lightAmount > 0.0f)
-		//{
-		//	endColor += lightAmount * colorToReturn * lighter.diffuse;
-		//	endColor /= lighter.att[0] + (lighter.att[1] * d) + (lighter.att[2] * (d * d));
-		//}
-		//endColor = saturate(endColor + finalAmbient);
-		//return float4(endColor, colorToReturn.a);
-		//}
-		////}
-
-		//SPOTLIGHT
-		//{
-		//lighter.dir = normalize(lighter.pos - input.pos);
-		//float surfaceRat = clamp(dot(-lighter.dir, lighter.coneDir),0,1);
-		//float spotFactor = (surfaceRat > coneRat) ? 1 : 0;
-		//lighter.rat = clamp(dot(lighter.dir, input.normal),0,1);
-		//returnVal = spotFactor * lighter.rat * lighter.color * colorToReturn;
-		//
-		//return saturate(returnVal);
-		//}
-
-
-		//finalColor = diffuse * light.ambient;
-		//finalColor += saturate(mul(light.dir, input.normal) * light.diffuse * diffuse);
-		//return float4(finalColor, diffuse.a);
-		//if (input.uv.x != -1 && input.uv.y != -1)
-		//{
-		//return colorToReturn;
-
-		//}
-		//else
-		//return float4(input.normal, 1.0f);
-		//return float4(0,1,0,1);
+		 
 
 }
