@@ -453,8 +453,8 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	auto loadGSTask = DX::ReadDataAsync(L"GeometryShader.cso");
 	auto loadPyramidVSTask = DX::ReadDataAsync(L"handDrawnShapesVertexShader.cso");
 	auto loadPyramidPSTask = DX::ReadDataAsync(L"handDrawnShapesPixelShader.cso");
-	auto loadSkyboxVSTask = DX::ReadDataAsync(L"SKYBOXVS.cso");
-	auto loadSkyboxPSTask = DX::ReadDataAsync(L"SKYBOXPS.cso");
+	//auto loadSkyboxVSTask = DX::ReadDataAsync(L"SKYBOXVS.cso");
+	//auto loadSkyboxPSTask = DX::ReadDataAsync(L"SKYBOXPS.cso");
 
 	//CREATING GEOMETRY SHADER
 	auto createGSTask = loadGSTask.then([this](const std::vector<byte>& fileData)
@@ -463,20 +463,31 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 
 	});
 
-	auto createSBTask = loadSkyboxVSTask.then([this](const std::vector<byte>& fileData)
-	{
-		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &pyramidVertexShader));
+	//CREATING SKYBOX
+	//auto createSBVSTask = loadSkyboxVSTask.then([this](const std::vector<byte>& fileData)
+	//{
+	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &skyboxVertexShader));
+	//
+	//	static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
+	//	{
+	//		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	//		{ "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	//
+	//	};
+	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &skyboxInputLayout));
+	//
+	//
+	//});
+	//auto createSBPSTask = loadSkyboxPSTask.then([this](const std::vector<byte>& fileData)
+	//{
+	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreatePixelShader(&fileData[0], fileData.size(), nullptr, &skyboxPixelShader));
+	//
+	//	CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&constantBufferDesc, nullptr, &skyboxConstantBuffer));
+	//});
 
-		static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
-
-		};
-		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &pyramidInputLayout));
 
 
-	});
 	//CREATING LIGHT BUFFER AND DESCRIPTION
 		//CD3D11_BUFFER_DESC lightBufferDesc(sizeof(forLightsOnly), D3D11_BIND_CONSTANT_BUFFER);
 		//DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&lightBufferDesc, nullptr, &lightBuffer));

@@ -13,13 +13,7 @@ struct VertexShaderInput
 	float2 uv : UV;
 	float3 normal : NORMAL;
 };
-
-// Per-vertex data used as input to the vertex shader.
-//struct VertexShaderInput
-//{
-//	float3 pos : POSITION;
-//	float3 color : color;
-//};
+ 
 // Per-pixel color data passed through the pixel shader.
 struct PixelShaderInput
 {

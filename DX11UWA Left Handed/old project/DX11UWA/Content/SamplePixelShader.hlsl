@@ -56,8 +56,6 @@ float4 main(PixelShaderInput input) : SV_TARGET
 		lighter.color = float4(0, 0, 1, 1.0f);
 		 lightRat = clamp(dot(-lighter.dir.xyz, input.normal), 0, 1);
 		 directionReturnVal = lightRat * lighter.color * colorToReturn;
-
-
 		//POINT LIGHT : RED
 		 lighter.color = float4(1, 0, 0.0f, 1.0f);
 		 lighter.pos = float4(0.0F, 0.0f, 0.0f, 1);// *sin(180);
@@ -65,8 +63,6 @@ float4 main(PixelShaderInput input) : SV_TARGET
 		 lightRat = saturate(dot(lighter.dir.xyz, input.normal.xyz));
 		 float attenuation = 1.0f - clamp(length(lighter.pos - input.wPos) / 15.1f, 0, 1);
 		 pointReturnVal = lightRat * lighter.color * colorToReturn * attenuation;
-
-		
 		//SPOTLIGHT : YELLOW
 		lighter.conePos = float4(0.0f, 0.7f, 0.0f, 1.0f);
 		lighter.color = float4(1, 1, 0.0f, 1.0f);
@@ -76,8 +72,4 @@ float4 main(PixelShaderInput input) : SV_TARGET
 		lightRat = clamp(dot(lighter.dir, input.normal),0,1);
 		spotLightResult = spotFactor * lightRat * lighter.color * colorToReturn;
 		return saturate(spotLightResult + (directionReturnVal + pointReturnVal) + lighter.ambient);
- 
-
-		 
-
 }

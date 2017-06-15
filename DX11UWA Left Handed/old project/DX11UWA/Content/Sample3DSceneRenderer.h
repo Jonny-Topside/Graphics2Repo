@@ -72,8 +72,10 @@ namespace DX11UWA
 		uint32	planeIndexCount;
 		 
 		//SKYBOX VARIABLES
-		Microsoft::WRL::ComPtr<ID3D11VertexShader>	skyBoxVertexShader;
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>	skyboxVertexShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	skyboxPixelShader;
+		Microsoft::WRL::ComPtr<ID3D11InputLayout>	skyboxInputLayout;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>	skyboxConstantBuffer;
 
 		// Variables used with the rendering loop.
 		bool	m_loadingComplete;
