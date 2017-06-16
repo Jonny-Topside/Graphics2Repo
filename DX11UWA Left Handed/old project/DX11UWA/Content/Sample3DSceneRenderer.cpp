@@ -202,6 +202,9 @@ void Sample3DSceneRenderer::Rotate(float radians)
 	XMStoreFloat4x4(&m_constantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
 	XMStoreFloat4x4(&pyramidConstantBufferData.model, XMMatrixTranspose(XMMatrixTranslation(4, 0, -2)));
 	XMStoreFloat4x4(&planeConstantBufferData.model, XMMatrixTranspose(XMMatrixTranslation(0, -1, 0)));
+	XMStoreFloat4x4(&skyboxConstantBufferData.model, XMMatrixTranslation(m_camera._41, m_camera._42, m_camera._43));
+
+	XMStoreFloat4x4(&m_constantBufferData.rotation, XMMatrixTranslation(m_camera._41, m_camera._42, m_camera._43));
 
 	//ME TRYING TO ROTATE MY OWN THING
 }
@@ -350,6 +353,7 @@ void Sample3DSceneRenderer::Render(void)
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
 	XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
 	XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
 
 	D3D11_SAMPLER_DESC pengSamplerDesc;
 	ZeroMemory(&pengSamplerDesc, sizeof(pengSamplerDesc));
@@ -415,6 +419,7 @@ void Sample3DSceneRenderer::Render(void)
 	{
 		context->PSSetSamplers(0, 1, planeSS.GetAddressOf());
 	}
+
 	context->IASetVertexBuffers(0, 1, planeVertexBuffer.GetAddressOf(), &stride, &offset);
 	// Each index is one 16-bit unsigned integer (short).
 	context->IASetIndexBuffer(planeIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
@@ -441,6 +446,24 @@ void Sample3DSceneRenderer::Render(void)
 	context->DrawIndexed(pyramidIndexCount, 0, 0);
 
 
+	//SKYBOX
+	CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/SunsetSkybox.dds", (ID3D11Resource**)skyboxTexture.Get(), &skyboxSRV);
+	ID3D11ShaderResourceView* skyboxSRVpointer[] = { skyboxSRV.Get() };
+	context->PSSetShaderResources(0, 1, skyboxSRVpointer);
+	{
+		context->PSSetSamplers(0, 1, skyboxSS.GetAddressOf());
+	}
+	context->VSSetShader(skyboxVertexShader.Get(), nullptr, 0);
+	context->PSSetShader(skyboxPixelShader.Get(), nullptr, 0);
+
+	context->IASetVertexBuffers(0, 1, skyboxVertexBuffer.GetAddressOf(), &stride, &offset);
+	context->IASetIndexBuffer(skyboxIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+	context->UpdateSubresource1(skyboxConstantBuffer.Get(), 0, NULL, &skyboxConstantBufferData, 0, 0, 0);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	context->IASetInputLayout(skyboxInputLayout.Get());
+	context->VSSetConstantBuffers1(0, 1, skyboxConstantBuffer.GetAddressOf(), nullptr, nullptr);
+	context->DrawIndexed(skyboxIndexCount, 0, 0);
+
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
@@ -454,7 +477,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	auto loadPyramidVSTask = DX::ReadDataAsync(L"handDrawnShapesVertexShader.cso");
 	auto loadPyramidPSTask = DX::ReadDataAsync(L"handDrawnShapesPixelShader.cso");
 	auto loadSkyboxVSTask = DX::ReadDataAsync(L"SKYBOXVS.cso");
-	//auto loadSkyboxPSTask = DX::ReadDataAsync(L"SKYBOXPS.cso");
+	auto loadSkyboxPSTask = DX::ReadDataAsync(L"SKYBOXPS.cso");
 
 	//CREATING GEOMETRY SHADER
 	auto createGSTask = loadGSTask.then([this](const std::vector<byte>& fileData)
@@ -464,28 +487,96 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	});
 
 	//CREATING SKYBOX
-	//auto createSBVSTask = loadSkyboxVSTask.then([this](const std::vector<byte>& fileData)
-	//{
-	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &skyboxVertexShader));
-	//
-	//	static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
-	//	{
-	//		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//		{ "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	//
-	//	};
-	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &skyboxInputLayout));
-	//
-	//
-	//});
-	//auto createSBPSTask = loadSkyboxPSTask.then([this](const std::vector<byte>& fileData)
-	//{
-	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreatePixelShader(&fileData[0], fileData.size(), nullptr, &skyboxPixelShader));
-	//
-	//	CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&constantBufferDesc, nullptr, &skyboxConstantBuffer));
-	//});
+	 auto createSBVSTask = loadSkyboxVSTask.then([this](const std::vector<byte>& fileData)
+	 {
+	 	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &skyboxVertexShader));
+	 
+	 	static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
+	 	{
+	 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	 		{ "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	 
+	 	};
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &skyboxInputLayout));
+	 });
+	 auto createSBPSTask = loadSkyboxPSTask.then([this](const std::vector<byte>& fileData)
+	 {
+	 	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreatePixelShader(&fileData[0], fileData.size(), nullptr, &skyboxPixelShader));
+	 
+	 	CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	 	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&constantBufferDesc, nullptr, &skyboxConstantBuffer));
+	 });
+	 auto createSBTask = (createSBPSTask && createSBVSTask).then([this]()
+	 {
+		 static const VertexPositionColor triVertices[] =
+		 {
+			 { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f) },
+			 { XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+			 { XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+			 { XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f) },
+			 { XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+			 { XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f) },
+			 { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f) },
+			 { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f) },
 
+		 };
+
+		 D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
+		 vertexBufferData.pSysMem = triVertices;
+		 //vertexBufferData.pSysMem = cubeVertices;
+		 vertexBufferData.SysMemPitch = 0;
+		 vertexBufferData.SysMemSlicePitch = 0;
+		 CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(triVertices), D3D11_BIND_VERTEX_BUFFER);
+
+		 //CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(VertexPositionUVNormal) * vertUvNormal.size(), D3D11_BIND_VERTEX_BUFFER);
+		 DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &skyboxVertexBuffer));
+
+
+		 static const unsigned short skyIndices[] =
+		 {
+			// 0,1,4,
+			// 0,2,1,
+			//
+			// 2,0,3,
+			// 3,0,4,
+			//
+			// 4,3,1,
+			// 2,3,1,
+			//
+			// 8,7,1,
+			// 4,8,7
+
+			 0,2,1, // -x
+			 1,2,3,
+
+			 4,5,6, // +x
+			 5,7,6,
+
+			 0,1,5, // -y
+			 0,5,4,
+
+			 2,6,7, // +y
+			 2,7,3,
+
+			 0,4,6, // -z
+			 0,6,2,
+
+			 1,3,7, // +z
+			 1,7,5,
+
+		 };
+		 skyboxIndexCount = ARRAYSIZE(skyIndices); 
+
+		 D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+		 //indexBufferData.pSysMem = cubeIndices;
+		 indexBufferData.pSysMem = skyIndices;
+		 indexBufferData.SysMemPitch = 0;
+		 indexBufferData.SysMemSlicePitch = 0;
+		 CD3D11_BUFFER_DESC indexBufferDesc(sizeof(skyIndices), D3D11_BIND_INDEX_BUFFER);
+		 //CD3D11_BUFFER_DESC indexBufferDesc(sizeof(unsigned int) * out_indices.size(), D3D11_BIND_INDEX_BUFFER);
+		 DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&indexBufferDesc, &indexBufferData, &skyboxIndexBuffer));
+
+	 });
 
 
 	//CREATING LIGHT BUFFER AND DESCRIPTION

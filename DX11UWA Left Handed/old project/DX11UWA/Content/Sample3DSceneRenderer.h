@@ -76,6 +76,17 @@ namespace DX11UWA
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	skyboxPixelShader;
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	skyboxInputLayout;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	skyboxConstantBuffer;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> skyboxSRV;
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> skyboxTexture;
+		ModelViewProjectionConstantBuffer	skyboxConstantBufferData;
+
+		Microsoft::WRL::ComPtr<ID3D11SamplerState> skyboxSS;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> skyboxIndexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>	skyboxVertexBuffer;
+
+		
+		uint32	skyboxIndexCount;
+
 
 		// Variables used with the rendering loop.
 		bool	m_loadingComplete;

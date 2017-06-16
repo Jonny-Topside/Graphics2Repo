@@ -6,7 +6,7 @@ cbuffer skyBuffer {
 struct VertexShaderInput
 {
 	float3 pos : POSITION;
-	float2 uv : UV;
+	float3 uv : UV;
 };
  struct PixelShaderInput
  {
@@ -19,7 +19,7 @@ PixelShaderInput main(VertexShaderInput input)
 	float4 pos = mul(float4(input.pos, 1.0f), wvp).xyzw;
 
 	output.pos = pos;
-	output.uv = input.pos;
+	output.uv = input.uv;
 
 	return output;
 }
