@@ -26,7 +26,7 @@ bool Sample3DSceneRenderer::loadOBJ(const char * path, std::vector<VertexPositio
 	{
 		char lineHeader[128];
 		int res = fscanf(file, "%s", lineHeader);
-		if (res == EOF)
+ 		if (res == EOF)
 			break;
 
 		if (strcmp(lineHeader, "v") == 0)
@@ -202,9 +202,9 @@ void Sample3DSceneRenderer::Rotate(float radians)
 	XMStoreFloat4x4(&m_constantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
 	XMStoreFloat4x4(&pyramidConstantBufferData.model, XMMatrixTranspose(XMMatrixTranslation(4, 0, -2)));
 	XMStoreFloat4x4(&planeConstantBufferData.model, XMMatrixTranspose(XMMatrixTranslation(0, -1, 0)));
-	XMStoreFloat4x4(&skyboxConstantBufferData.model, XMMatrixTranslation(m_camera._41, m_camera._42, m_camera._43));
+	XMStoreFloat4x4(&skyboxConstantBufferData.model, XMMatrixTranslation(m_camera._41, m_camera._42, m_camera._43 ));
 
-	XMStoreFloat4x4(&m_constantBufferData.rotation, XMMatrixTranslation(m_camera._41, m_camera._42, m_camera._43));
+	//XMStoreFloat4x4(&m_constantBufferData.rotation, XMMatrixTranslation(m_camera._41, m_camera._42, m_camera._43));
 
 	//ME TRYING TO ROTATE MY OWN THING
 }
@@ -353,7 +353,7 @@ void Sample3DSceneRenderer::Render(void)
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
 	XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
 	XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
-	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMLoadFloat4x4(&m_camera));
 
 	D3D11_SAMPLER_DESC pengSamplerDesc;
 	ZeroMemory(&pengSamplerDesc, sizeof(pengSamplerDesc));
@@ -368,12 +368,7 @@ void Sample3DSceneRenderer::Render(void)
 		context->PSSetSamplers(0, 1, pengSS.GetAddressOf());
 	}
 
-
-	//XMStoreFloat4x4(&lightBufferData, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
-
-	XMMatrixTranslation(200, 200, 200);
-
-
+ 
 	// Prepare the constant buffer to send it to the graphics device.
 	 //context->UpdateSubresource1(m_constantBuffer.Get(), 0, NULL, &m_constantBufferData, 0, 0, 0);
 	 //context->UpdateSubresource1(pyramidConstantBuffer.Get(), 0, NULL, &pyramidConstantBufferData, 0, 0, 0);
@@ -384,14 +379,11 @@ void Sample3DSceneRenderer::Render(void)
 	// Each vertex is one instance of the VertexPositionColor struct.
 	UINT stride = sizeof(VertexPositionUVNormal);
 	UINT offset = 0;
-
-
 	context->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 	// Each index is one 16-bit unsigned integer (short).
 	context->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 	context->UpdateSubresource1(m_constantBuffer.Get(), 0, NULL, &m_constantBufferData, 0, 0, 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 	context->IASetInputLayout(m_inputLayout.Get());
 	// Attach our vertex shader.
 	context->VSSetShader(m_vertexShader.Get(), nullptr, 0);
@@ -402,15 +394,14 @@ void Sample3DSceneRenderer::Render(void)
 	// Draw the objects.
 	context->DrawIndexed(m_indexCount, 0, 0);
 
-	//GEO SHADER
-	context->GSSetShader(GeometryShader.Get(), nullptr, 0);
-	//	context->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-	//context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	//context->DrawIndexed(m_indexCount, 0, 0);
-	context->DrawIndexedInstanced(m_indexCount, 3, 0, 0, 0);
-	context->GSSetShader(nullptr, nullptr, 0);
+	////GEO SHADER
+	//context->GSSetShader(GeometryShader.Get(), nullptr, 0);
+	////	context->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+	//context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+	////context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	////context->DrawIndexed(m_indexCount, 0, 0);
+	//context->DrawIndexedInstanced(m_indexCount, 3, 0, 0, 0);
+	//context->GSSetShader(nullptr, nullptr, 0);
 
 	//PLANE
 	CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/bleachedWood_seamless.dds", (ID3D11Resource**)planeTexture.Get(), &planeSRV);
@@ -419,10 +410,12 @@ void Sample3DSceneRenderer::Render(void)
 	{
 		context->PSSetSamplers(0, 1, planeSS.GetAddressOf());
 	}
+	context->PSSetShader(planePS.Get(), nullptr, 0);
+	context->VSSetShader(planeVS.Get(), nullptr, 0);
 
 	context->IASetVertexBuffers(0, 1, planeVertexBuffer.GetAddressOf(), &stride, &offset);
 	// Each index is one 16-bit unsigned integer (short).
-	context->IASetIndexBuffer(planeIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+	context->IASetIndexBuffer(planeIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
 	context->UpdateSubresource1(planeConstantBuffer.Get(), 0, NULL, &planeConstantBufferData, 0, 0, 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	context->IASetInputLayout(planeInputLayout.Get());
@@ -432,38 +425,48 @@ void Sample3DSceneRenderer::Render(void)
 	context->DrawIndexed(planeIndexCount, 0, 0);
 
 
-	//PYRAMID
-	stride = sizeof(VertexPositionColor);
-
-	context->IASetVertexBuffers(0, 1, pyramidVertexBuffer.GetAddressOf(), &stride, &offset);
-	context->IASetIndexBuffer(pyramidIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
-	context->UpdateSubresource1(pyramidConstantBuffer.Get(), 0, NULL, &pyramidConstantBufferData, 0, 0, 0);
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	context->IASetInputLayout(pyramidInputLayout.Get());
-	//context->VSSetShader(pyramidVertexShader.Get(), nullptr, 0);
-	context->VSSetConstantBuffers1(0, 1, pyramidConstantBuffer.GetAddressOf(), nullptr, nullptr);
-	//context->PSSetShader(pyramidPixelShader.Get(), nullptr, 0);
-	context->DrawIndexed(pyramidIndexCount, 0, 0);
-
-
-	//SKYBOX
-	CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/SunsetSkybox.dds", (ID3D11Resource**)skyboxTexture.Get(), &skyboxSRV);
-	ID3D11ShaderResourceView* skyboxSRVpointer[] = { skyboxSRV.Get() };
-	context->PSSetShaderResources(0, 1, skyboxSRVpointer);
-	{
-		context->PSSetSamplers(0, 1, skyboxSS.GetAddressOf());
-	}
-	context->VSSetShader(skyboxVertexShader.Get(), nullptr, 0);
-	context->PSSetShader(skyboxPixelShader.Get(), nullptr, 0);
-
-	context->IASetVertexBuffers(0, 1, skyboxVertexBuffer.GetAddressOf(), &stride, &offset);
-	context->IASetIndexBuffer(skyboxIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
-	context->UpdateSubresource1(skyboxConstantBuffer.Get(), 0, NULL, &skyboxConstantBufferData, 0, 0, 0);
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	context->IASetInputLayout(skyboxInputLayout.Get());
-	context->VSSetConstantBuffers1(0, 1, skyboxConstantBuffer.GetAddressOf(), nullptr, nullptr);
-	context->DrawIndexed(skyboxIndexCount, 0, 0);
-
+	// //PYRAMID
+	// stride = sizeof(VertexPositionColor);
+	// 
+	// context->IASetVertexBuffers(0, 1, pyramidVertexBuffer.GetAddressOf(), &stride, &offset);
+	// context->IASetIndexBuffer(pyramidIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+	// context->UpdateSubresource1(pyramidConstantBuffer.Get(), 0, NULL, &pyramidConstantBufferData, 0, 0, 0);
+	// context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// context->IASetInputLayout(pyramidInputLayout.Get());
+	// //context->VSSetShader(pyramidVertexShader.Get(), nullptr, 0);
+	// context->VSSetConstantBuffers1(0, 1, pyramidConstantBuffer.GetAddressOf(), nullptr, nullptr);
+	// //context->PSSetShader(pyramidPixelShader.Get(), nullptr, 0);
+	// context->DrawIndexed(pyramidIndexCount, 0, 0);
+	// 
+	// 
+	// //SKYBOX
+	// HRESULT h = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/SunsetSkybox.dds", (ID3D11Resource**)skyboxTexture.Get(), &skyboxSRV);
+	// ID3D11ShaderResourceView* skyboxSRVpointer[] = { skyboxSRV.Get() };
+	// stride = sizeof(VertexPositionUVNormal);
+	// 
+	// D3D11_SAMPLER_DESC skyboxSamplerDesc;
+	// ZeroMemory(&skyboxSamplerDesc, sizeof(skyboxSamplerDesc));
+	// skyboxSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	// skyboxSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	// skyboxSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	// skyboxSamplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	// DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateSamplerState(&skyboxSamplerDesc, skyboxSS.GetAddressOf())); //& 
+	// 
+	// context->PSSetShaderResources(0, 1, skyboxSRVpointer);
+	// {
+	// 	context->PSSetSamplers(0, 1, skyboxSS.GetAddressOf());
+	// }
+	// context->VSSetShader(skyboxVertexShader.Get(), nullptr, 0);
+	// context->PSSetShader(skyboxPixelShader.Get(), nullptr, 0);
+	// 
+	// context->IASetVertexBuffers(0, 1, skyboxVertexBuffer.GetAddressOf(), &stride, &offset);
+	// context->IASetIndexBuffer(skyboxIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+	// context->UpdateSubresource1(skyboxConstantBuffer.Get(), 0, NULL, &skyboxConstantBufferData, 0, 0, 0);
+	// context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// context->IASetInputLayout(skyboxInputLayout.Get());
+	// context->VSSetConstantBuffers1(0, 1, skyboxConstantBuffer.GetAddressOf(), nullptr, nullptr);
+	// context->DrawIndexed(skyboxIndexCount, 0, 0);
+	// //context->ClearDepthStencilView(skyboxStencil, 0, 100, 0);
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
@@ -495,85 +498,39 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 	 	{
 	 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	 		{ "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	 
+			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+
 	 	};
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &skyboxInputLayout));
 	 });
 	 auto createSBPSTask = loadSkyboxPSTask.then([this](const std::vector<byte>& fileData)
 	 {
 	 	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreatePixelShader(&fileData[0], fileData.size(), nullptr, &skyboxPixelShader));
-	 
 	 	CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
 	 	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&constantBufferDesc, nullptr, &skyboxConstantBuffer));
 	 });
 	 auto createSBTask = (createSBPSTask && createSBVSTask).then([this]()
 	 {
-		 static const VertexPositionColor triVertices[] =
-		 {
-			 { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f) },
-			 { XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-			 { XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-			 { XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f) },
-			 { XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-			 { XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f) },
-			 { XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f) },
-			 { XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f) },
+		 std::vector<VertexPositionUVNormal> vertUvNormal;
+		 std::vector<unsigned int> out_indices;
 
-		 };
+		  bool res = loadOBJ("Assets/skyboxCube.obj", vertUvNormal, out_indices);
 
-		 D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
-		 vertexBufferData.pSysMem = triVertices;
-		 //vertexBufferData.pSysMem = cubeVertices;
+		 D3D11_SUBRESOURCE_DATA vertexBufferData;
+		 vertexBufferData.pSysMem = vertUvNormal.data();
 		 vertexBufferData.SysMemPitch = 0;
 		 vertexBufferData.SysMemSlicePitch = 0;
-		 CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(triVertices), D3D11_BIND_VERTEX_BUFFER);
 
-		 //CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(VertexPositionUVNormal) * vertUvNormal.size(), D3D11_BIND_VERTEX_BUFFER);
+		 CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(VertexPositionUVNormal) * vertUvNormal.size(), D3D11_BIND_VERTEX_BUFFER);
 		 DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &skyboxVertexBuffer));
 
-
-		 static const unsigned short skyIndices[] =
-		 {
-			// 0,1,4,
-			// 0,2,1,
-			//
-			// 2,0,3,
-			// 3,0,4,
-			//
-			// 4,3,1,
-			// 2,3,1,
-			//
-			// 8,7,1,
-			// 4,8,7
-
-			 0,2,1, // -x
-			 1,2,3,
-
-			 4,5,6, // +x
-			 5,7,6,
-
-			 0,1,5, // -y
-			 0,5,4,
-
-			 2,6,7, // +y
-			 2,7,3,
-
-			 0,4,6, // -z
-			 0,6,2,
-
-			 1,3,7, // +z
-			 1,7,5,
-
-		 };
-		 skyboxIndexCount = ARRAYSIZE(skyIndices); 
+		 skyboxIndexCount = out_indices.size();
 
 		 D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
-		 //indexBufferData.pSysMem = cubeIndices;
-		 indexBufferData.pSysMem = skyIndices;
+		 indexBufferData.pSysMem = out_indices.data();
 		 indexBufferData.SysMemPitch = 0;
 		 indexBufferData.SysMemSlicePitch = 0;
-		 CD3D11_BUFFER_DESC indexBufferDesc(sizeof(skyIndices), D3D11_BIND_INDEX_BUFFER);
-		 //CD3D11_BUFFER_DESC indexBufferDesc(sizeof(unsigned int) * out_indices.size(), D3D11_BIND_INDEX_BUFFER);
+		 CD3D11_BUFFER_DESC indexBufferDesc(sizeof(unsigned int) * out_indices.size(), D3D11_BIND_INDEX_BUFFER);
 		 DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&indexBufferDesc, &indexBufferData, &skyboxIndexBuffer));
 
 	 });
@@ -585,8 +542,9 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 
 	//THIS IS ALL FOR CREATING THE PLANE
 
-	auto createPlaneVSTask = loadVSTask.then([this](const std::vector<byte>& fileData)
+	auto createPlaneVSTask = loadPyramidVSTask.then([this](const std::vector<byte>& fileData)
 	{
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &planeVS));
 
 		static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
 		{
@@ -595,10 +553,11 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
 
 		};
-		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &planeInputLayout));
+		 DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &planeInputLayout));
 	});
-	auto createPlanePSTask = loadPSTask.then([this](const std::vector<byte>& fileData)
+	auto createPlanePSTask = loadPyramidPSTask.then([this](const std::vector<byte>& fileData)
 	{
+		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreatePixelShader(&fileData[0], fileData.size(), nullptr, &planePS));
 
 		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&constantBufferDesc, nullptr, &planeConstantBuffer));
@@ -726,82 +685,82 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		});
 	}
 
-	//CREATING PYRAMID
-	auto createPyramidVSTask = loadPyramidVSTask.then([this](const std::vector<byte>& fileData)
-	{
-		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &pyramidVertexShader));
-
-		static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
-
-		};
-		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &pyramidInputLayout));
-
-	});
-
-	auto createPyramidPSTask = loadPyramidPSTask.then([this](const std::vector<byte>& fileData)
-	{
-		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreatePixelShader(&fileData[0], fileData.size(), nullptr, &pyramidPixelShader));
-
-		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&constantBufferDesc, nullptr, &pyramidConstantBuffer));
-	});
-
-	auto createPyramidTask = (createPyramidPSTask && createPyramidVSTask).then([this]()
-	{
-		//Load mesh vertices. Each vertex has a position and a color.
-		static const VertexPositionColor triVertices[] =
-		{
-			{XMFLOAT3(0.0f, 0.5f, 0.0f), //top  0
-			XMFLOAT3(-0.5f, 0.0f, -0.5f)}, //front left 1
-			{XMFLOAT3(-0.5f, 0.0f, -0.5f), //back left 2
-			XMFLOAT3(0.5f, 0.0f, -0.5f)}, //back right 3
-			{XMFLOAT3(0.5f,  0.0f, -0.5f)} //front right 4
-		};
-
-		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
-		vertexBufferData.pSysMem = triVertices;
-		//vertexBufferData.pSysMem = cubeVertices;
-		vertexBufferData.SysMemPitch = 0;
-		vertexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(triVertices), D3D11_BIND_VERTEX_BUFFER);
-
-		//CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(VertexPositionUVNormal) * vertUvNormal.size(), D3D11_BIND_VERTEX_BUFFER);
-		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &pyramidVertexBuffer));
-
-
-		static const unsigned short triIndices[] =
-		{
-			0,1,4,
-			0,2,1,
-
-			2,0,3,
-			3,0,4,
-
-			4,3,1,
-			2,3,1
-
-
-		};
-		pyramidIndexCount = ARRAYSIZE(triIndices);
-
-		//m_indexCount = out_indices.size();
-
-		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
-		//indexBufferData.pSysMem = cubeIndices;
-		indexBufferData.pSysMem = triIndices;
-		indexBufferData.SysMemPitch = 0;
-		indexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(triIndices), D3D11_BIND_INDEX_BUFFER);
-		//CD3D11_BUFFER_DESC indexBufferDesc(sizeof(unsigned int) * out_indices.size(), D3D11_BIND_INDEX_BUFFER);
-		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&indexBufferDesc, &indexBufferData, &pyramidIndexBuffer));
-
-	});
-
-	// Once the cube is loaded, the object is ready to be rendered.
-	createPyramidTask.then([this]()
+	////CREATING PYRAMID
+	//auto createPyramidVSTask = loadPyramidVSTask.then([this](const std::vector<byte>& fileData)
+	//{
+	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &pyramidVertexShader));
+	//
+	//	static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
+	//	{
+	//		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	//		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT , D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	//
+	//	};
+	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &pyramidInputLayout));
+	//
+	//});
+	//
+	//auto createPyramidPSTask = loadPyramidPSTask.then([this](const std::vector<byte>& fileData)
+	//{
+	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreatePixelShader(&fileData[0], fileData.size(), nullptr, &pyramidPixelShader));
+	//
+	//	CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&constantBufferDesc, nullptr, &pyramidConstantBuffer));
+	//});
+	//
+	//auto createPyramidTask = (createPyramidPSTask && createPyramidVSTask).then([this]()
+	//{
+	//	//Load mesh vertices. Each vertex has a position and a color.
+	//	static const VertexPositionColor triVertices[] =
+	//	{
+	//		{XMFLOAT3(0.0f, 0.5f, 0.0f), //top  0
+	//		XMFLOAT3(-0.5f, 0.0f, -0.5f)}, //front left 1
+	//		{XMFLOAT3(-0.5f, 0.0f, -0.5f), //back left 2
+	//		XMFLOAT3(0.5f, 0.0f, -0.5f)}, //back right 3
+	//		{XMFLOAT3(0.5f,  0.0f, -0.5f)} //front right 4
+	//	};
+	//
+	//	D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
+	//	vertexBufferData.pSysMem = triVertices;
+	//	//vertexBufferData.pSysMem = cubeVertices;
+	//	vertexBufferData.SysMemPitch = 0;
+	//	vertexBufferData.SysMemSlicePitch = 0;
+	//	CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(triVertices), D3D11_BIND_VERTEX_BUFFER);
+	//
+	//	//CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(VertexPositionUVNormal) * vertUvNormal.size(), D3D11_BIND_VERTEX_BUFFER);
+	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&vertexBufferDesc, &vertexBufferData, &pyramidVertexBuffer));
+	//
+	//
+	//	static const unsigned short triIndices[] =
+	//	{
+	//		0,1,4,
+	//		0,2,1,
+	//
+	//		2,0,3,
+	//		3,0,4,
+	//
+	//		4,3,1,
+	//		2,3,1
+	//
+	//
+	//	};
+	//	pyramidIndexCount = ARRAYSIZE(triIndices);
+	//
+	//	//m_indexCount = out_indices.size();
+	//
+	//	D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+	//	//indexBufferData.pSysMem = cubeIndices;
+	//	indexBufferData.pSysMem = triIndices;
+	//	indexBufferData.SysMemPitch = 0;
+	//	indexBufferData.SysMemSlicePitch = 0;
+	//	CD3D11_BUFFER_DESC indexBufferDesc(sizeof(triIndices), D3D11_BIND_INDEX_BUFFER);
+	//	//CD3D11_BUFFER_DESC indexBufferDesc(sizeof(unsigned int) * out_indices.size(), D3D11_BIND_INDEX_BUFFER);
+	//	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&indexBufferDesc, &indexBufferData, &pyramidIndexBuffer));
+	//
+	//});
+	//
+	//// Once the cube is loaded, the object is ready to be rendered.
+	createPlaneTask.then([this]()
 	{
 		m_loadingComplete = true;
 	});

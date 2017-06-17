@@ -61,6 +61,9 @@ namespace DX11UWA
 		//geometry shader 
 		Microsoft::WRL::ComPtr<ID3D11GeometryShader>	GeometryShader;
 		//plane vars
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>	planeVS;
+		Microsoft::WRL::ComPtr<ID3D11PixelShader>	planePS;
+
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	planeConstantBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	planeVertexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> planeIndexBuffer;
@@ -79,7 +82,7 @@ namespace DX11UWA
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> skyboxSRV;
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> skyboxTexture;
 		ModelViewProjectionConstantBuffer	skyboxConstantBufferData;
-
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> skyboxStencil;
 		Microsoft::WRL::ComPtr<ID3D11SamplerState> skyboxSS;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> skyboxIndexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	skyboxVertexBuffer;
