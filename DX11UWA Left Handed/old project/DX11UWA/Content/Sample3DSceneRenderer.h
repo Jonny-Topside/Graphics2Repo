@@ -98,6 +98,12 @@ namespace DX11UWA
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	skyboxVertexBuffer;
 		uint32	skyboxIndexCount;
 
+		//VIEWPORTS
+		D3D11_VIEWPORT					viewport1;
+		D3D11_VIEWPORT						viewport2;
+
+
+
 
 		// Variables used with the rendering loop.
 		bool	m_loadingComplete;
@@ -111,6 +117,8 @@ namespace DX11UWA
 
 		// Matrix data member for the camera
 		DirectX::XMFLOAT4X4 m_camera;
+		DirectX::XMFLOAT4X4 m_camera1;
+
 	};
 }
 

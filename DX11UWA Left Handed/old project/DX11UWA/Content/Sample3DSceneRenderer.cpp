@@ -95,26 +95,9 @@ bool Sample3DSceneRenderer::loadOBJ(const char * path, std::vector<VertexPositio
 
 
 
-//void Sample3DSceneRenderer::CreateVP(void)
-//{
-//	D3D11_VIEWPORT vp;
-//	vp.Width = m_deviceResources->GetOutputSize().Width / 2;
-//	vp.Height = m_deviceResources->GetOutputSize().Height;
-//	vp.MinDepth = 0.0f;
-//	vp.MaxDepth = 1.0f;
-//	vp.TopLeftX = 0;
-//	vp.TopLeftY = 0;
-//	m_scene.viewports.push_back(vp);
-//
-//	D3D11_VIEWPORT vp2;
-//	vp2.Width = m_deviceResources->GetOutputSize().Width / 2;
-//	vp2.Height = m_deviceResources->GetOutputSize().Height;
-//	vp2.MinDepth = 0.0f;
-//	vp2.MaxDepth = 1.0f;
-//	vp2.TopLeftX = m_deviceResources->GetOutputSize().Width / 2;
-//	vp2.TopLeftY = 0;
-//	m_scene.viewports.push_back(vp2);
-//}
+	
+ 
+ 
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 Sample3DSceneRenderer::Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
@@ -171,12 +154,28 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources(void)
 	static const XMVECTORF32 at = { 0.0f, -0.1f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 
+	static const XMVECTORF32 eye1 = { -0.0f, 1.0f, -0.5f, 0.0f };
+	static const XMVECTORF32 at1 = { 0.0f, 1.0f, 0.0f, 0.0f };
+	static const XMVECTORF32 up1 = { 0.0f, 1.0f, 0.0f, 0.0f };
+
 	XMStoreFloat4x4(&m_camera, XMMatrixInverse(nullptr, XMMatrixLookAtLH(eye, at, up)));
+	//XMStoreFloat4x4(&m_camera1, XMMatrixInverse(nullptr, XMMatrixLookAtLH(eye1, at1, up1)));
+
+
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
+	//XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye1, at1, up1)));
+
 	XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
 	XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
 	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
 	XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
+
+
+	//XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye1, at1, up1)));
+	//XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye1, at1, up1)));
+	//XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye1, at1, up1)));
+	//XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye1, at1, up1)));
+
 
 }
 
@@ -355,17 +354,53 @@ void Sample3DSceneRenderer::Render(void)
 
 
 	auto context = m_deviceResources->GetD3DDeviceContext();
+
+	//viewport1.Width = m_deviceResources->GetOutputSize().Width / 2;
+	//viewport1.Height = m_deviceResources->GetOutputSize().Height;
+	//
+	//viewport1.MinDepth = 0.0f;
+	//viewport1.MaxDepth = 1.0f;
+	//viewport1.TopLeftX = 0;
+	//viewport1.TopLeftY = 0;
+	//
+	//viewport2.Width = m_deviceResources->GetOutputSize().Width / 2;
+	//viewport2.Height = m_deviceResources->GetOutputSize().Height;
+	//
+	//viewport2.MinDepth = 0.0f;
+	//viewport2.MaxDepth = 1.0f;
+	//viewport2.TopLeftX = m_deviceResources->GetOutputSize().Width / 2;
+	//viewport2.TopLeftY = 0;
+	//std::vector<D3D11_VIEWPORT> views;
+	//views.push_back(viewport1);
+	//views.push_back(viewport2);
+	//for (int i = 0; i < 2; i++)
+	//{
+	//m_deviceResources->GetD3DDeviceContext()->RSSetViewports(1, &views[i]);
+	//}
+
+
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	//XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
+
 	XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	//XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
+
 	XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	//XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
+
 	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	//XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
+
 	//XMStoreFloat4x4(&skyboxConstantBufferData.view,XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
 	skyboxConstantBufferData.view._14 = 0;
 	skyboxConstantBufferData.view._24 = 0;
 	skyboxConstantBufferData.view._34 = 0;
 
 	XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMLoadFloat4x4(&m_camera));
+	//XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMLoadFloat4x4(&m_camera1));
 
+
+	//context->RSSetViewports(2, )
 
 	D3D11_SAMPLER_DESC pengSamplerDesc;
 	ZeroMemory(&pengSamplerDesc, sizeof(pengSamplerDesc));
