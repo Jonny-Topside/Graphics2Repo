@@ -114,6 +114,9 @@
     <Image Include="Assets\SunsetSkybox.dds">
       <Filter>Assets</Filter>
     </Image>
+    <Image Include="Assets\MidBoss_Floor_Normal.dds">
+      <Filter>Assets</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest" />
@@ -122,6 +125,7 @@
     <None Include="DX11UWA_TemporaryKey.pfx" />
     <None Include="Assets\peng.obj" />
     <None Include="Assets\PLANE.obj" />
+    <None Include="Assets\skyboxCube.obj" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Content\SamplePixelShader.hlsl">
@@ -142,10 +146,12 @@
     <FxCompile Include="SKYBOXVS.hlsl">
       <Filter>Content\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="SKYBOXPS.hlsl" />
+    <FxCompile Include="SKYBOXPS.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <Object Include="Assets\skyboxCube.obj">
+    <Object Include="Assets\normalCubeForTexturingTo.obj">
       <Filter>Assets</Filter>
     </Object>
   </ItemGroup>

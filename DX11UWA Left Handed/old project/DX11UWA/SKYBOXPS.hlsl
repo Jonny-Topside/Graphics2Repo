@@ -13,7 +13,8 @@ SamplerState skyBoxSS : register(s0);
 
 float4 SBPS_Main(PixelShaderInput input) : SV_TARGET
 {
-	return  skyBox.Sample(skyBoxSS, input.uv);
+	//return float4(1,0,0,1);
+	//skyBox.Sample(skyBoxSS, input.uv);
 	
-//	return skyBox.Sample(skyBoxSS, input.uv)
+	return skyBox.Sample(skyBoxSS, input.uv);
 }

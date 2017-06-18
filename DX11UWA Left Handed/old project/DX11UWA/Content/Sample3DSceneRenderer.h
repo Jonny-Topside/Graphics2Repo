@@ -63,7 +63,6 @@ namespace DX11UWA
 		//plane vars
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	planeVS;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	planePS;
-
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	planeConstantBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	planeVertexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> planeIndexBuffer;
@@ -73,7 +72,18 @@ namespace DX11UWA
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> planeTexture;
 		Microsoft::WRL::ComPtr<ID3D11SamplerState> planeSS;
 		uint32	planeIndexCount;
-		 
+
+		//METAL CUBE
+		Microsoft::WRL::ComPtr<ID3D11Buffer>	metalCubeConstantBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>	metalCubeVertexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>    metalCubeIndexBuffer;
+		Microsoft::WRL::ComPtr<ID3D11InputLayout>	metalCubeInputLayout;
+		ModelViewProjectionConstantBuffer metalCubeConstantBufferData;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalCubeSRV;
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> metalCubeTexture;
+		Microsoft::WRL::ComPtr<ID3D11SamplerState> metalCubeSS;
+
+
 		//SKYBOX VARIABLES
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	skyboxVertexShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	skyboxPixelShader;
@@ -86,8 +96,6 @@ namespace DX11UWA
 		Microsoft::WRL::ComPtr<ID3D11SamplerState> skyboxSS;
 		Microsoft::WRL::ComPtr<ID3D11Buffer> skyboxIndexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>	skyboxVertexBuffer;
-
-		
 		uint32	skyboxIndexCount;
 
 
