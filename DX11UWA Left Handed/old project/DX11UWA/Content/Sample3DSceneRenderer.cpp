@@ -92,13 +92,6 @@ bool Sample3DSceneRenderer::loadOBJ(const char * path, std::vector<VertexPositio
 	}
 }
 
-
-
-
-	
- 
- 
-
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 Sample3DSceneRenderer::Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
@@ -111,6 +104,7 @@ Sample3DSceneRenderer::Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceRes
 	m_currMousePos = nullptr;
 	m_prevMousePos = nullptr;
 	memset(&m_camera, 0, sizeof(XMFLOAT4X4));
+	memset(&m_camera1, 0, sizeof(XMFLOAT4X4));
 
 	CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
@@ -144,6 +138,7 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources(void)
 	XMMATRIX orientationMatrix = XMLoadFloat4x4(&orientation);
 
 	XMStoreFloat4x4(&m_constantBufferData.projection, XMMatrixTranspose(perspectiveMatrix * orientationMatrix));
+	
 	XMStoreFloat4x4(&pyramidConstantBufferData.projection, XMMatrixTranspose(perspectiveMatrix * orientationMatrix));
 	XMStoreFloat4x4(&planeConstantBufferData.projection, XMMatrixTranspose(perspectiveMatrix * orientationMatrix));
 	XMStoreFloat4x4(&skyboxConstantBufferData.projection, XMMatrixTranspose(perspectiveMatrix * orientationMatrix));
@@ -157,25 +152,15 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources(void)
 	static const XMVECTORF32 eye1 = { -0.0f, 1.0f, -0.5f, 0.0f };
 	static const XMVECTORF32 at1 = { 0.0f, 1.0f, 0.0f, 0.0f };
 	static const XMVECTORF32 up1 = { 0.0f, 1.0f, 0.0f, 0.0f };
-
+	//good
 	XMStoreFloat4x4(&m_camera, XMMatrixInverse(nullptr, XMMatrixLookAtLH(eye, at, up)));
-	//XMStoreFloat4x4(&m_camera1, XMMatrixInverse(nullptr, XMMatrixLookAtLH(eye1, at1, up1)));
-
-
-	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
-	//XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye1, at1, up1)));
-
-	XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
-	XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
-	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
-	XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
-
-
-	//XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye1, at1, up1)));
-	//XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye1, at1, up1)));
-	//XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye1, at1, up1)));
-	//XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye1, at1, up1)));
-
+	XMStoreFloat4x4(&m_camera1, XMMatrixInverse(nullptr, XMMatrixLookAtLH(eye1, at1, up1)));
+	//good
+	//
+	 XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
+	 XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye1, at1, up1)));
+	//
+	
 
 }
 
@@ -339,11 +324,24 @@ void Sample3DSceneRenderer::StopTracking(void)
 // Renders one frame using the vertex and pixel shaders.
 void Sample3DSceneRenderer::Render(void)
 {
+	auto context = m_deviceResources->GetD3DDeviceContext();
 	HRESULT r;
+	//PENG
 	//PENG
 	r = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/peng.dds", (ID3D11Resource**)pengTexture.Get(), &pengSRV);
 	ID3D11ShaderResourceView* pengSRVpointer[] = { pengSRV.Get() };
-
+	D3D11_SAMPLER_DESC pengSamplerDesc;
+	ZeroMemory(&pengSamplerDesc, sizeof(pengSamplerDesc));
+	pengSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	pengSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	pengSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	pengSamplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateSamplerState(&pengSamplerDesc, pengSS.GetAddressOf())); //&
+	// Each vertex is one instance of the VertexPositionColor struct.
+	UINT stride = sizeof(VertexPositionUVNormal);
+	UINT offset = 0;
+	context->PSSetShaderResources(0, 1, pengSRVpointer);
+	context->PSSetSamplers(0, 1, pengSS.GetAddressOf());
 
 	// Loading is asynchronous. Only draw geometry after it's loaded.
 	if (!m_loadingComplete)
@@ -353,30 +351,49 @@ void Sample3DSceneRenderer::Render(void)
 
 
 
-	auto context = m_deviceResources->GetD3DDeviceContext();
 
-	//viewport1.Width = m_deviceResources->GetOutputSize().Width / 2;
-	//viewport1.Height = m_deviceResources->GetOutputSize().Height;
-	//
-	//viewport1.MinDepth = 0.0f;
-	//viewport1.MaxDepth = 1.0f;
-	//viewport1.TopLeftX = 0;
-	//viewport1.TopLeftY = 0;
-	//
-	//viewport2.Width = m_deviceResources->GetOutputSize().Width / 2;
-	//viewport2.Height = m_deviceResources->GetOutputSize().Height;
-	//
-	//viewport2.MinDepth = 0.0f;
-	//viewport2.MaxDepth = 1.0f;
-	//viewport2.TopLeftX = m_deviceResources->GetOutputSize().Width / 2;
-	//viewport2.TopLeftY = 0;
-	//std::vector<D3D11_VIEWPORT> views;
-	//views.push_back(viewport1);
-	//views.push_back(viewport2);
-	//for (int i = 0; i < 2; i++)
-	//{
-	//m_deviceResources->GetD3DDeviceContext()->RSSetViewports(1, &views[i]);
-	//}
+	//VP
+	 viewport1.Width = m_deviceResources->GetOutputSize().Width / 2;
+	 viewport1.Height = m_deviceResources->GetOutputSize().Height;
+	 
+	 viewport1.MinDepth = 0.0f;
+	 viewport1.MaxDepth = 1.0f;
+	 viewport1.TopLeftX = 0;
+	 viewport1.TopLeftY = 0;
+	 
+	 viewport2.Width = m_deviceResources->GetOutputSize().Width / 2;
+	 viewport2.Height = m_deviceResources->GetOutputSize().Height;
+	 
+	 viewport2.MinDepth = 0.0f;
+	 viewport2.MaxDepth = 1.0f;
+	 viewport2.TopLeftX = m_deviceResources->GetOutputSize().Width / 2;
+	 viewport2.TopLeftY = 0;
+	 std::vector<D3D11_VIEWPORT> views;
+	 views.push_back(viewport1);
+	 views.push_back(viewport2);
+	 for (int i = 0; i < 2; i++)
+	 {
+	 m_deviceResources->GetD3DDeviceContext()->RSSetViewports(1, &views[i]);
+
+	 }
+
+	 m_deviceResources->GetD3DDeviceContext()->RSSetViewports(1, &views[0]);
+	 XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+
+
+	m_deviceResources->GetD3DDeviceContext()->RSSetViewports(1, &views[1]);
+	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
+	XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
+	XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
+	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
+	XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
+	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
+
 
 
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
@@ -398,23 +415,8 @@ void Sample3DSceneRenderer::Render(void)
 
 	XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMLoadFloat4x4(&m_camera));
 	//XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMLoadFloat4x4(&m_camera1));
-
-
-	//context->RSSetViewports(2, )
-
-	D3D11_SAMPLER_DESC pengSamplerDesc;
-	ZeroMemory(&pengSamplerDesc, sizeof(pengSamplerDesc));
-	pengSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	pengSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	pengSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	pengSamplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateSamplerState(&pengSamplerDesc, pengSS.GetAddressOf())); //&
-	context->PSSetShaderResources(0, 1, pengSRVpointer);
-	context->PSSetSamplers(0, 1, pengSS.GetAddressOf());
-	//PENG
-	// Each vertex is one instance of the VertexPositionColor struct.
-	UINT stride = sizeof(VertexPositionUVNormal);
-	UINT offset = 0;
+	 
+	
 	context->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 	// Each index is one 16-bit unsigned integer (short).
 	context->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
