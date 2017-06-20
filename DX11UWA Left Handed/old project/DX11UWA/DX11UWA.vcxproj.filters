@@ -153,5 +153,11 @@
     <FxCompile Include="SKYBOXPS.hlsl">
       <Filter>Content\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="NormalMapPS.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="NormalMapVS.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
