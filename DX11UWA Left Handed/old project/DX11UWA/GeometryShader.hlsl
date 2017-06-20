@@ -60,7 +60,9 @@ void main(point float4 input[1] : SV_POSITION, point float2 uvInput[1] : TEXCOOR
 	//pointOne.pos = input[0];
 	//pointOne.pos.x += 3;
 	//pointOne.uv = uvInput[0];
-	//
+	
+
+	
 	//pointTwo.pos.x = pointOne.pos.x + 100;
 	//pointTwo.pos.y = pointOne.pos.y - 100;
 	//pointThree.pos.z = pointTwo.pos.z = pointOne.pos.z + 100;
