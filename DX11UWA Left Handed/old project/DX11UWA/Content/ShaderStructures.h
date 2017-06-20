@@ -17,7 +17,7 @@ namespace DX11UWA
 		DirectX::XMFLOAT4X4 model;
 		DirectX::XMFLOAT4X4 view;
 		DirectX::XMFLOAT4X4 projection;
-		DirectX::XMFLOAT4X4 rotation;
+		//DirectX::XMFLOAT4X4 rotation;
 
 	};
 
@@ -34,5 +34,7 @@ namespace DX11UWA
 		DirectX::XMFLOAT3 pos;
 		DirectX::XMFLOAT2 uv;
 		DirectX::XMFLOAT3 normal;
+		DirectX::XMFLOAT4 tangent;
+
 	};
 }

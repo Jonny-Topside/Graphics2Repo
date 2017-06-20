@@ -29,6 +29,8 @@ struct PixelShaderInput
 	//ADDED A COLOR  
 };
 texture2D pengText : register(t0);
+texture2D pengText1 : register(t1);
+
 SamplerState pengSamplerState : register(s0);
 
 
