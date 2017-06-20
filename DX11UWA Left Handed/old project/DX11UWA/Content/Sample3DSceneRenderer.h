@@ -69,6 +69,8 @@ namespace DX11UWA
 		Microsoft::WRL::ComPtr<ID3D11InputLayout>	planeInputLayout;
 		ModelViewProjectionConstantBuffer planeConstantBufferData;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> planeSRV;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> planeSRV2;
+
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> planeTexture;
 		Microsoft::WRL::ComPtr<ID3D11SamplerState> planeSS;
 		uint32	planeIndexCount;

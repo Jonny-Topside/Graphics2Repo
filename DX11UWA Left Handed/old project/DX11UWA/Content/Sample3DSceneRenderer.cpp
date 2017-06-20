@@ -349,11 +349,10 @@ void Sample3DSceneRenderer::Render(void)
 	{
 		return;
 	}
-
-
-
-
+	 
 	//VP
+	{
+
 	viewport1.Width = m_deviceResources->GetOutputSize().Width / 2;
 	viewport1.Height = m_deviceResources->GetOutputSize().Height;
 	viewport1.MinDepth = 0.0f;
@@ -372,24 +371,13 @@ void Sample3DSceneRenderer::Render(void)
 	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
 
-
-//	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
-//	XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
-//	XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
-//	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
-//	XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
-//	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
-
-	//XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
-	//XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
-	//XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
-
+	}
+ 
 	skyboxConstantBufferData.view._14 = 0;
 	skyboxConstantBufferData.view._24 = 0;
 	skyboxConstantBufferData.view._34 = 0;
 
-	//XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMLoadFloat4x4(&m_camera));
-
+	 
 
 	context->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
 	// Each index is one 16-bit unsigned integer (short).
@@ -416,19 +404,33 @@ void Sample3DSceneRenderer::Render(void)
 
 	//PLANE
 
-	CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/bleachedWood_seamless.dds", (ID3D11Resource**)planeTexture.Get(), &planeSRV);
-	ID3D11ShaderResourceView* planeSRVpointer[] = { planeSRV.Get() };
+	CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/MidBoss_Floor_Diffuse.dds", nullptr, &planeSRV);
+	CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/MidBoss_Floor_Normal.dds",  nullptr, &planeSRV2);
+
+	
+	ID3D11ShaderResourceView* planeSRVpointer[] = { planeSRV.Get(), planeSRV2.Get()};
+	//ID3D11ShaderResourceView* planeSRVpointer[] = {  planeSRV2.Get() };
+
 	context->PSSetShaderResources(0, 1, planeSRVpointer);
-	{
-		context->PSSetSamplers(0, 1, planeSS.GetAddressOf());
-	}
+	context->UpdateSubresource1(planeConstantBuffer.Get(), 0, NULL, &planeConstantBufferData, 0, 0, 0);
+	context->PSSetSamplers(0, 1, planeSS.GetAddressOf());
+
+	D3D11_SAMPLER_DESC planeSamplerDesc;
+	ZeroMemory(&planeSamplerDesc, sizeof(planeSamplerDesc));
+	planeSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	planeSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	planeSamplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	planeSamplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateSamplerState(&planeSamplerDesc, planeSS.GetAddressOf())); //& 
+
+
+
 	context->PSSetShader(planePS.Get(), nullptr, 0);
 	context->VSSetShader(planeVS.Get(), nullptr, 0);
 
 	context->IASetVertexBuffers(0, 1, planeVertexBuffer.GetAddressOf(), &stride, &offset);
 	// Each index is one 16-bit unsigned integer (short).
 	context->IASetIndexBuffer(planeIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-	context->UpdateSubresource1(planeConstantBuffer.Get(), 0, NULL, &planeConstantBufferData, 0, 0, 0);
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	context->IASetInputLayout(planeInputLayout.Get());
 	// Attach our vertex shader.
@@ -460,6 +462,7 @@ void Sample3DSceneRenderer::Render(void)
 	{
 		context->PSSetSamplers(0, 1, metalCubeSS.GetAddressOf());
 	}
+
 	stride = sizeof(VertexPositionUVNormal);
 	D3D11_SAMPLER_DESC metalCubeSamplerDesc;
 	ZeroMemory(&metalCubeSamplerDesc, sizeof(metalCubeSamplerDesc));
@@ -586,7 +589,7 @@ void Sample3DSceneRenderer::Render(void)
 	}
 
 	//PLANE
-	CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/bleachedWood_seamless.dds", (ID3D11Resource**)planeTexture.Get(), &planeSRV);
+	CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/MidBoss_Floor_Diffuse.dds", (ID3D11Resource**)planeTexture.Get(), &planeSRV);
 	context->PSSetShaderResources(0, 1, planeSRVpointer);
 	{
 		context->PSSetSamplers(0, 1, planeSS.GetAddressOf());
@@ -619,7 +622,6 @@ void Sample3DSceneRenderer::Render(void)
 	//context->PSSetShader(pyramidPixelShader.Get(), nullptr, 0);
 	context->DrawIndexed(pyramidIndexCount, 0, 0);
 	}
-
 
 	//METAL CUBE
 	{
@@ -713,7 +715,6 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&constantBufferDesc, nullptr, &skyboxConstantBuffer));
 
 	});
-
 	auto createSBPSTask = loadSkyboxPSTask.then([this](const std::vector<byte>& fileData)
 	{
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreatePixelShader(&fileData[0], fileData.size(), nullptr, &skyboxPixelShader));
@@ -745,13 +746,8 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 
 	});
 
-
-	//CREATING LIGHT BUFFER AND DESCRIPTION
-		//CD3D11_BUFFER_DESC lightBufferDesc(sizeof(forLightsOnly), D3D11_BIND_CONSTANT_BUFFER);
-		//DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&lightBufferDesc, nullptr, &lightBuffer));
-
-	//THIS IS ALL FOR CREATING THE PLANE
-	auto createPlaneVSTask = loadPyramidVSTask.then([this](const std::vector<byte>& fileData)
+	// THE PLANE
+	auto createPlaneVSTask = loadVSTask.then([this](const std::vector<byte>& fileData)
 	{
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &planeVS));
 
@@ -764,12 +760,13 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		};
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &planeInputLayout));
 	});
-	auto createPlanePSTask = loadPyramidPSTask.then([this](const std::vector<byte>& fileData)
+	auto createPlanePSTask = loadPSTask.then([this](const std::vector<byte>& fileData)
 	{
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreatePixelShader(&fileData[0], fileData.size(), nullptr, &planePS));
 
 		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&constantBufferDesc, nullptr, &planeConstantBuffer));
+
 	});
 	auto createPlaneTask = (createPlanePSTask && createPlaneVSTask).then([this]()
 	{
@@ -797,6 +794,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 
 	});
 
+	//METAL CUBE
 	auto createMetalVSTask = loadPyramidVSTask.then([this](const std::vector<byte>& fileData)
 	{
 		//DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &planeVS));
@@ -843,7 +841,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 
 	});
 
-	//ALL THINGS FOR DRAWING THE PENGUIN
+	//PENGUIN
 		// After the vertex shader file is loaded, create the shader and input layout.
 	auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData)
 	{
@@ -937,8 +935,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 
 	});
 
-
-	////CREATING PYRAMID
+	//PYRAMID
 	auto createPyramidVSTask = loadPyramidVSTask.then([this](const std::vector<byte>& fileData)
 	{
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateVertexShader(&fileData[0], fileData.size(), nullptr, &pyramidVertexShader));
@@ -953,7 +950,6 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), &fileData[0], fileData.size(), &pyramidInputLayout));
 
 	});
-
 	auto createPyramidPSTask = loadPyramidPSTask.then([this](const std::vector<byte>& fileData)
 	{
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreatePixelShader(&fileData[0], fileData.size(), nullptr, &pyramidPixelShader));
@@ -961,7 +957,6 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 		CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
 		DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateBuffer(&constantBufferDesc, nullptr, &pyramidConstantBuffer));
 	});
-
 	auto createPyramidTask = (createPyramidPSTask && createPyramidVSTask).then([this]()
 	{
 		//Load mesh vertices. Each vertex has a position and a color.
@@ -1023,19 +1018,18 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 void Sample3DSceneRenderer::ReleaseDeviceDependentResources(void)
 {
 	m_loadingComplete = false;
-	m_vertexShader.Reset();
-	m_inputLayout.Reset();
-	m_pixelShader.Reset();
-	m_constantBuffer.Reset();
-	//m_constantBuffer.ReleaseAndGetAddressOf();
-
-	m_vertexBuffer.Reset();
-	m_indexBuffer.Reset();
-	GeometryShader.Reset();
-	pyramidConstantBuffer.Reset();
-	pyramidIndexBuffer.Reset();
-	pyramidInputLayout.Reset();
-	pyramidPixelShader.Reset();
-	pyramidVertexShader.Reset();
-	pyramidVertexBuffer.Reset();
+       m_vertexShader.Reset();
+    	m_inputLayout.Reset();
+        m_pixelShader.Reset();
+     m_constantBuffer.Reset();
+	   m_vertexBuffer.Reset();
+        m_indexBuffer.Reset();
+	   GeometryShader.Reset();
+pyramidConstantBuffer.Reset();
+   pyramidIndexBuffer.Reset();
+   pyramidInputLayout.Reset();
+   pyramidPixelShader.Reset();
+  pyramidVertexShader.Reset();
+  pyramidVertexBuffer.Reset();
+ 
 }

@@ -46,7 +46,7 @@ PixelShaderInput main(VertexShaderInput input)
 	//return output;
 
 	output.uv = input.uv;
-	output.normal = input.normal;
-	output.normal = mul(output.normal, model);
+	//output.normal = input.normal;
+	output.normal = mul(input.normal, model);
 	return output;
 }

@@ -190,6 +190,7 @@
   <ItemGroup>
     <Image Include="Assets\bleachedWood_seamless.dds" />
     <Image Include="Assets\LockScreenLogo.scale-200.png" />
+    <Image Include="Assets\MidBoss_Floor_Diffuse.dds" />
     <Image Include="Assets\MidBoss_Floor_Normal.dds" />
     <Image Include="Assets\peng.dds" />
     <Image Include="Assets\SplashScreen.scale-200.png" />
