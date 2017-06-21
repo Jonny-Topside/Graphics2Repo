@@ -10,6 +10,8 @@ using namespace DX11UWA;
 using namespace DirectX;
 using namespace Windows::Foundation;
 
+float fovAngleY = 70.0f * XM_PI / 180.0f;
+bool firstRun = true;
 bool Sample3DSceneRenderer::loadOBJ(const char * path, std::vector<VertexPositionUVNormal> &vpuvn, std::vector<unsigned int> &outIndices)
 {
 	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
@@ -78,11 +80,11 @@ bool Sample3DSceneRenderer::loadOBJ(const char * path, std::vector<VertexPositio
 		}
 
 	}
-	float vertEdge0		;
-		float vertEdge1	;
+	float vertEdge0;
+	float vertEdge1;
 
-		float texEdge0;
-		float texEdge1;
+	float texEdge0;
+	float texEdge1;
 	for (unsigned int i = 0; i < vertexIndices.size(); i++)
 	{
 		VertexPositionUVNormal tempvpuvn;
@@ -152,8 +154,13 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources(void)
 {
 	Size outputSize = m_deviceResources->GetOutputSize();
 	float aspectRatio = (outputSize.Width * 0.5f) / outputSize.Height;
-	float fovAngleY = 70.0f * XM_PI / 180.0f;
 
+	static const XMVECTOR eye = { 0.0f, 0.7f, -1.5f, 0.0f };
+	static const XMVECTOR at = { 0.0f, -0.1f, 0.0f, 0.0f };
+	static const XMVECTOR up = { 0.0f, 1.0f, 0.0f, 0.0f };
+	static const XMVECTOR eye1 = { 0.0f, 3.0f, -2.5f, 0.0f };
+	static const XMVECTOR at1 = { 1.0f, 2.0f, 3.0f, 0.0f };
+	static const XMVECTOR up1 = { 0.0f, 1.0f, 0.0f, 0.0f };
 	// This is a simple example of change that can be made when the app is in
 	// portrait or snapped view.
 	//if (aspectRatio < 1.0f)
@@ -173,23 +180,23 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources(void)
 	XMFLOAT4X4 orientation = m_deviceResources->GetOrientationTransform3D();
 	XMMATRIX orientationMatrix = XMLoadFloat4x4(&orientation);
 	XMStoreFloat4x4(&m_constantBufferData.projection, XMMatrixTranspose(perspectiveMatrix * orientationMatrix));
-	
+
 	XMStoreFloat4x4(&pyramidConstantBufferData.projection, XMMatrixTranspose(perspectiveMatrix * orientationMatrix));
 	XMStoreFloat4x4(&planeConstantBufferData.projection, XMMatrixTranspose(perspectiveMatrix * orientationMatrix));
 	XMStoreFloat4x4(&skyboxConstantBufferData.projection, XMMatrixTranspose(perspectiveMatrix * orientationMatrix));
 	XMStoreFloat4x4(&metalCubeConstantBufferData.projection, XMMatrixTranspose(perspectiveMatrix * orientationMatrix));
 
+
 	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-	  XMVECTORF32 eye = { 0.0f, 0.7f, -1.5f, 0.0f };
-	  XMVECTORF32 at = { 0.0f, -0.1f, 0.0f, 0.0f };
-	  XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
-	 
-	  XMVECTORF32 eye1 = { 0.0f, 3.0f, -2.5f, 0.0f };
-	  XMVECTORF32 at1 = { 1.0f, 2.0f, 3.0f, 0.0f };
-	  XMVECTORF32 up1 = { 0.0f, 1.0f, 0.0f, 0.0f };
+	if (firstRun == true)
+	{
+		XMStoreFloat4x4(&m_camera, XMMatrixInverse(nullptr, XMMatrixLookAtLH(eye, at, up)));
+		XMStoreFloat4x4(&m_camera1, XMMatrixInverse(nullptr, XMMatrixLookAtLH(eye1, at1, up1)));
+
+		firstRun = false;
+	}
+
 	//good
-	XMStoreFloat4x4(&m_camera, XMMatrixInverse(nullptr, XMMatrixLookAtLH(eye, at, up)));
-	XMStoreFloat4x4(&m_camera1, XMMatrixInverse(nullptr, XMMatrixLookAtLH(eye1, at1, up1)));
 	//good
 	//
 	//XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
@@ -202,7 +209,6 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources(void)
 // Called once per frame, rotates the cube and calculates the model and view matrices.
 void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 {
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	//_CrtSetBreakAlloc(187);
 	XMVECTOR camTarget;
 	XMVECTOR xvec = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
@@ -371,33 +377,33 @@ void Sample3DSceneRenderer::Render(void)
 	{
 		return;
 	}
-	 
+
 	//VP
 	{
 
-	viewport1.Width = m_deviceResources->GetOutputSize().Width / 2;
-	viewport1.Height = m_deviceResources->GetOutputSize().Height;
-	viewport1.MinDepth = 0.0f;
-	viewport1.MaxDepth = 1.0f;
-	viewport1.TopLeftX = 0;
-	viewport1.TopLeftY = 0;
+		viewport1.Width = m_deviceResources->GetOutputSize().Width / 2;
+		viewport1.Height = m_deviceResources->GetOutputSize().Height;
+		viewport1.MinDepth = 0.0f;
+		viewport1.MaxDepth = 1.0f;
+		viewport1.TopLeftX = 0;
+		viewport1.TopLeftY = 0;
 
 
 
-	m_deviceResources->GetD3DDeviceContext()->RSSetViewports(1, &viewport1);
-	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
-	XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
-	XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
-	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
-	XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
-	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
-	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+		m_deviceResources->GetD3DDeviceContext()->RSSetViewports(1, &viewport1);
+		XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+		XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+		XMStoreFloat4x4(&planeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+		XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+		XMStoreFloat4x4(&metalCubeConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+		XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
+		XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
 
 	}
- 
+
 	skyboxConstantBufferData.view._14 = 0;
 	skyboxConstantBufferData.view._24 = 0;
-	skyboxConstantBufferData.view._34 = 0; 
+	skyboxConstantBufferData.view._34 = 0;
 
 	//PENG
 	r = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/peng.dds", (ID3D11Resource**)pengTexture.Get(), &pengSRV);
@@ -430,21 +436,21 @@ void Sample3DSceneRenderer::Render(void)
 	////GEO SHADER
 	{
 
-	context->GSSetShader(GeometryShader.Get(), nullptr, 0);
-	//	context->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-	context->DrawIndexed(m_indexCount, 0, 0);
-	//context->DrawIndexedInstanced(m_indexCount, 3624, 0, 0, 0);
-	context->GSSetShader(nullptr, nullptr, 0);
+		context->GSSetShader(GeometryShader.Get(), nullptr, 0);
+		//	context->IASetIndexBuffer(m_indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+		context->DrawIndexed(m_indexCount, 0, 0);
+		//context->DrawIndexedInstanced(m_indexCount, 3624, 0, 0, 0);
+		context->GSSetShader(nullptr, nullptr, 0);
 	}
 
 	//PLANE
 
 	CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/MidBoss_Floor_Diffuse.dds", nullptr, &planeSRV);
-	CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/MidBoss_Floor_Normal.dds",  nullptr, &planeSRV2);
+	CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/MidBoss_Floor_Normal.dds", nullptr, &planeSRV2);
 
-	
-	ID3D11ShaderResourceView* planeSRVpointer[] = { planeSRV.Get(), planeSRV2.Get()};
+
+	ID3D11ShaderResourceView* planeSRVpointer[] = { planeSRV.Get(), planeSRV2.Get() };
 	//ID3D11ShaderResourceView* planeSRVpointer[] = {  planeSRV2.Get() };
 
 	context->PSSetShaderResources(0, 2, planeSRVpointer);
@@ -462,7 +468,7 @@ void Sample3DSceneRenderer::Render(void)
 	context->PSSetSamplers(1, 1, planeSS.GetAddressOf());
 
 
-	
+
 	context->IASetVertexBuffers(0, 1, planeVertexBuffer.GetAddressOf(), &stride, &offset);
 	// Each index is one 16-bit unsigned integer (short).
 	context->IASetIndexBuffer(planeIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
@@ -494,7 +500,7 @@ void Sample3DSceneRenderer::Render(void)
 	}
 
 	//METAL CUBE
-	
+
 
 	HRESULT h = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(), L"Assets/MidBoss_Floor_Normal.dds", (ID3D11Resource**)metalCubeTexture.Get(), &metalCubeSRV);
 	ID3D11ShaderResourceView* metalCubeSRVpointer[] = { metalCubeSRV.Get() };
@@ -520,11 +526,11 @@ void Sample3DSceneRenderer::Render(void)
 	context->IASetInputLayout(metalCubeInputLayout.Get());
 	context->VSSetConstantBuffers1(0, 1, metalCubeConstantBuffer.GetAddressOf(), nullptr, nullptr);
 	//context->DrawIndexed(skyboxIndexCount, 0, 0);
-	  context->DrawIndexedInstanced(skyboxIndexCount, 4, 0, 0, 0);
-	
+	context->DrawIndexedInstanced(skyboxIndexCount, 4, 0, 0, 0);
+
 
 	// //SKYBOX
-	
+
 
 	ID3D11ShaderResourceView* skyboxSRVpointer[] = { skyboxSRV.Get() };
 	//stride = sizeof(VertexPositionUVNormal);
@@ -538,26 +544,26 @@ void Sample3DSceneRenderer::Render(void)
 	DX::ThrowIfFailed(m_deviceResources->GetD3DDevice()->CreateSamplerState(&skyboxSamplerDesc, skyboxSS.GetAddressOf())); //& 
 
 	{
-	context->UpdateSubresource1(skyboxConstantBuffer.Get(), 0, NULL, &skyboxConstantBufferData, 0, 0, 0);
+		context->UpdateSubresource1(skyboxConstantBuffer.Get(), 0, NULL, &skyboxConstantBufferData, 0, 0, 0);
 
-	context->IASetIndexBuffer(skyboxIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-	context->IASetVertexBuffers(0, 1, skyboxVertexBuffer.GetAddressOf(), &stride, &offset);
+		context->IASetIndexBuffer(skyboxIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+		context->IASetVertexBuffers(0, 1, skyboxVertexBuffer.GetAddressOf(), &stride, &offset);
 
-	context->VSSetConstantBuffers(0, 1, skyboxConstantBuffer.GetAddressOf());
-	context->PSSetShaderResources(0, 1, skyboxSRVpointer);
-	context->PSSetSamplers(0, 1, skyboxSS.GetAddressOf());
-	context->VSSetShader(skyboxVertexShader.Get(), nullptr, 0);
-	context->PSSetShader(skyboxPixelShader.Get(), nullptr, 0);
+		context->VSSetConstantBuffers(0, 1, skyboxConstantBuffer.GetAddressOf());
+		context->PSSetShaderResources(0, 1, skyboxSRVpointer);
+		context->PSSetSamplers(0, 1, skyboxSS.GetAddressOf());
+		context->VSSetShader(skyboxVertexShader.Get(), nullptr, 0);
+		context->PSSetShader(skyboxPixelShader.Get(), nullptr, 0);
 
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	context->IASetInputLayout(skyboxInputLayout.Get());
-	context->DrawIndexed(skyboxIndexCount, 0, 0);
+		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		context->IASetInputLayout(skyboxInputLayout.Get());
+		context->DrawIndexed(skyboxIndexCount, 0, 0);
 	}
- 
+
 
 	//VIEWPORT 2
-	
+
 
 	m_deviceResources->GetD3DDeviceContext()->RSSetViewports(1, &viewport2);
 
@@ -577,7 +583,7 @@ void Sample3DSceneRenderer::Render(void)
 	XMStoreFloat4x4(&skyboxConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera1))));
 
-	
+
 
 	//XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
 	//XMStoreFloat4x4(&pyramidConstantBufferData.view, XMMatrixTranspose(XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera))));
@@ -658,15 +664,15 @@ void Sample3DSceneRenderer::Render(void)
 	//PYRAMID
 	stride = sizeof(VertexPositionColor);
 	{
-	context->IASetVertexBuffers(0, 1, pyramidVertexBuffer.GetAddressOf(), &stride, &offset);
-	context->IASetIndexBuffer(pyramidIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
-	context->UpdateSubresource1(pyramidConstantBuffer.Get(), 0, NULL, &pyramidConstantBufferData, 0, 0, 0);
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	context->IASetInputLayout(pyramidInputLayout.Get());
-	//context->VSSetShader(pyramidVertexShader.Get(), nullptr, 0);
-	context->VSSetConstantBuffers1(0, 1, pyramidConstantBuffer.GetAddressOf(), nullptr, nullptr);
-	//context->PSSetShader(pyramidPixelShader.Get(), nullptr, 0);
-	context->DrawIndexed(pyramidIndexCount, 0, 0);
+		context->IASetVertexBuffers(0, 1, pyramidVertexBuffer.GetAddressOf(), &stride, &offset);
+		context->IASetIndexBuffer(pyramidIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+		context->UpdateSubresource1(pyramidConstantBuffer.Get(), 0, NULL, &pyramidConstantBufferData, 0, 0, 0);
+		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		context->IASetInputLayout(pyramidInputLayout.Get());
+		//context->VSSetShader(pyramidVertexShader.Get(), nullptr, 0);
+		context->VSSetConstantBuffers1(0, 1, pyramidConstantBuffer.GetAddressOf(), nullptr, nullptr);
+		//context->PSSetShader(pyramidPixelShader.Get(), nullptr, 0);
+		context->DrawIndexed(pyramidIndexCount, 0, 0);
 	}
 
 	//METAL CUBE
@@ -698,7 +704,7 @@ void Sample3DSceneRenderer::Render(void)
 
 	// //SKYBOX
 	{
-		 
+
 		ZeroMemory(&skyboxSamplerDesc, sizeof(skyboxSamplerDesc));
 		skyboxSamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 		skyboxSamplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -717,9 +723,9 @@ void Sample3DSceneRenderer::Render(void)
 		context->PSSetSamplers(0, 1, skyboxSS.GetAddressOf());
 		context->VSSetShader(skyboxVertexShader.Get(), nullptr, 0);
 		context->PSSetShader(skyboxPixelShader.Get(), nullptr, 0);
-  		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		context->IASetInputLayout(skyboxInputLayout.Get());
-		context->DrawIndexed(skyboxIndexCount, 0, 0); 
+		context->DrawIndexed(skyboxIndexCount, 0, 0);
 	}
 }
 
@@ -1065,18 +1071,18 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources(void)
 void Sample3DSceneRenderer::ReleaseDeviceDependentResources(void)
 {
 	m_loadingComplete = false;
-       m_vertexShader.Reset();
-    	m_inputLayout.Reset();
-        m_pixelShader.Reset();
-     m_constantBuffer.Reset();
-	   m_vertexBuffer.Reset();
-        m_indexBuffer.Reset();
-	   GeometryShader.Reset();
-pyramidConstantBuffer.Reset();
-   pyramidIndexBuffer.Reset();
-   pyramidInputLayout.Reset();
-   pyramidPixelShader.Reset();
-  pyramidVertexShader.Reset();
-  pyramidVertexBuffer.Reset();
- 
+	m_vertexShader.Reset();
+	m_inputLayout.Reset();
+	m_pixelShader.Reset();
+	m_constantBuffer.Reset();
+	m_vertexBuffer.Reset();
+	m_indexBuffer.Reset();
+	GeometryShader.Reset();
+	pyramidConstantBuffer.Reset();
+	pyramidIndexBuffer.Reset();
+	pyramidInputLayout.Reset();
+	pyramidPixelShader.Reset();
+	pyramidVertexShader.Reset();
+	pyramidVertexBuffer.Reset();
+
 }

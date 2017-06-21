@@ -19,6 +19,8 @@ using namespace Windows::Graphics::Display;
 [Platform::MTAThread]
 int main(Platform::Array<Platform::String^>^)
 {
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
 	auto direct3DApplicationSource = ref new Direct3DApplicationSource();
 	CoreApplication::Run(direct3DApplicationSource);
 	return 0;
